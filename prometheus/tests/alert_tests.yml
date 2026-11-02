@@ -1,0 +1,171 @@
+# Promtool Unit Tests for Infrastructure and Blackbox Alerts
+# Project: Linux System Monitoring & Reliability Lab
+# Role: Agent 7 (Senior SRE - Incident Detection & Alert Engineering)
+
+rule_files:
+  - ../alerts/infrastructure_alerts.yml
+  - ../alerts/blackbox_alerts.yml
+
+evaluation_interval: 15s
+
+tests:
+  # Test 1: Node Exporter Scrape Failure Alert (for: 2m)
+  - interval: 15s
+    input_series:
+      - series: 'up{job="node",instance="rubi"}'
+        values: '1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0'
+    alert_rule_test:
+      - eval_time: 1m
+        alertname: NodeExporterUnavailable
+        exp_alerts: [] # Pending (<2m)
+      - eval_time: 2m30s
+        alertname: NodeExporterUnavailable
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              subsystem: observability
+              category: exporter_health
+              impact: kernel_telemetry_loss
+              job: node
+              instance: rubi
+            exp_annotations:
+              summary: "Node Exporter scrape failure on rubi"
+              description: "Prometheus has failed to scrape Node Exporter at rubi (:9100) for >2 minutes. Host hardware and kernel metrics are unobserved."
+              diagnostic_context: "Daemon crash, port blockage, or OOM kill of node_exporter binary."
+              diagnostic_command: "systemctl status prometheus-node-exporter.service"
+              runbook_url: "docs/troubleshooting/target-down.md"
+
+  # Test 2: CPU Utilization Warning (>85% for 5m) and Critical (>95% for 3m)
+  - interval: 15s
+    input_series:
+      # Simulate 90% utilization (10% idle = 1.5s per 15s)
+      - series: 'node_cpu_seconds_total{instance="rubi",cpu="0",mode="idle"}'
+        values: '0+1.5x40'
+    alert_rule_test:
+      - eval_time: 4m
+        alertname: HostHighCpuUtilizationWarning
+        exp_alerts: [] # Pending at 4m
+      - eval_time: 6m
+        alertname: HostHighCpuUtilizationWarning
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              subsystem: cpu
+              category: saturation
+              impact: processing_delay
+              instance: rubi
+            exp_annotations:
+              summary: "Elevated CPU utilization on rubi (90.0%)"
+              description: "Active CPU utilization averaged 90.0% across all cores over a 5-minute moving window. Approaching saturation threshold."
+              diagnostic_context: "Identify high-consuming threads and run-queue contention."
+              diagnostic_command: "top -b -n 1 -o %CPU | head -n 20"
+              runbook_url: "docs/troubleshooting/cpu-saturation.md"
+
+  # Test 3: Disk Read Latency Alert (>30ms for 5m)
+  - interval: 15s
+    input_series:
+      # 100 reads completed every 15s -> 6.67 reads/s
+      - series: 'node_disk_reads_completed_total{instance="rubi",device="nvme0n1"}'
+        values: '0+100x40'
+      # 4 seconds spent reading every 15s -> 0.267s/s => latency = 4/100 = 0.040s (40ms > 30ms)
+      - series: 'node_disk_read_time_seconds_total{instance="rubi",device="nvme0n1"}'
+        values: '0+4x40'
+    alert_rule_test:
+      - eval_time: 4m
+        alertname: HostDiskReadLatencyHigh
+        exp_alerts: [] # Pending at 4m (<5m)
+      - eval_time: 6m
+        alertname: HostDiskReadLatencyHigh
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              subsystem: disk_io
+              category: latency
+              impact: read_service_time_degradation
+              instance: rubi
+              device: nvme0n1
+            exp_annotations:
+              summary: "High disk read latency on nvme0n1 (40ms)"
+              description: "Average disk read latency (r_await) on nvme0n1 is 40ms (>30ms) for 5 minutes. Storage queue saturation or slow NAND controller."
+              diagnostic_context: "Correlate with IOPS, byte throughput, and I/O pressure stall."
+              diagnostic_command: "iostat -xz 1 5"
+              runbook_url: "docs/troubleshooting/disk-latency.md"
+
+  # Test 4: Critical Service Down Alert (ssh.service failed/inactive, for: 1m)
+  - interval: 15s
+    input_series:
+      - series: 'node_systemd_unit_state{instance="rubi",name="ssh.service",state="active"}'
+        values: '1 1 0 0 0 0 0 0 0 0'
+    alert_rule_test:
+      - eval_time: 45s
+        alertname: HostCriticalServiceDown
+        exp_alerts: [] # Pending (<1m)
+      - eval_time: 2m
+        alertname: HostCriticalServiceDown
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              subsystem: systemd
+              category: availability
+              impact: critical_service_outage
+              instance: rubi
+              name: ssh.service
+              state: active
+            exp_annotations:
+              summary: "Critical systemd service down: ssh.service"
+              description: "Essential host service ssh.service is not in 'active' state on rubi. Immediate operator triage required."
+              diagnostic_context: "Verify service unit journal for crash or exit status."
+              diagnostic_command: "systemctl status ssh.service && journalctl -u ssh.service -n 25 --no-pager"
+              runbook_url: "docs/troubleshooting/systemd-unit.md"
+
+  # Test 5: Blackbox Endpoint Down Alert (probe_success == 0, for: 1m)
+  - interval: 15s
+    input_series:
+      - series: 'probe_success{instance="http://host.docker.internal:9100/metrics",probe_type="http"}'
+        values: '1 1 0 0 0 0 0 0'
+    alert_rule_test:
+      - eval_time: 45s
+        alertname: BlackboxEndpointDown
+        exp_alerts: []
+      - eval_time: 2m
+        alertname: BlackboxEndpointDown
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              subsystem: blackbox
+              category: availability
+              impact: endpoint_unreachable
+              instance: "http://host.docker.internal:9100/metrics"
+              probe_type: http
+            exp_annotations:
+              summary: "Synthetic probe failed: endpoint http://host.docker.internal:9100/metrics is down"
+              description: "Blackbox probe of type 'http' against http://host.docker.internal:9100/metrics has failed for >1 minute. Target service is unreachable or rejecting connections."
+              diagnostic_context: "Check network route, listening socket, firewall rules, and target service daemon."
+              diagnostic_command: "curl -iv http://host.docker.internal:9100/metrics || nc -zv http://host.docker.internal:9100/metrics"
+              runbook_url: "docs/troubleshooting/blackbox-probe.md"
+
+  # Test 6: Blackbox DNS Endpoint Down Alert (probe_success == 0, probe_type="dns", for: 1m)
+  - interval: 15s
+    input_series:
+      - series: 'probe_success{instance="1.1.1.1:53",probe_type="dns"}'
+        values: '1 1 0 0 0 0 0 0'
+    alert_rule_test:
+      - eval_time: 45s
+        alertname: BlackboxEndpointDown
+        exp_alerts: []
+      - eval_time: 2m
+        alertname: BlackboxEndpointDown
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              subsystem: blackbox
+              category: availability
+              impact: endpoint_unreachable
+              instance: "1.1.1.1:53"
+              probe_type: dns
+            exp_annotations:
+              summary: "Synthetic probe failed: endpoint 1.1.1.1:53 is down"
+              description: "Blackbox probe of type 'dns' against 1.1.1.1:53 has failed for >1 minute. Target service is unreachable or rejecting connections."
+              diagnostic_context: "Check network route, listening socket, firewall rules, and target service daemon."
+              diagnostic_command: "curl -iv 1.1.1.1:53 || nc -zv 1.1.1.1:53"
+              runbook_url: "docs/troubleshooting/blackbox-probe.md"
