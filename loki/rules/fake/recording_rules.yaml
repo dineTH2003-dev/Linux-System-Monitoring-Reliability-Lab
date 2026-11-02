@@ -1,0 +1,45 @@
+# ==============================================================================
+# Loki LogQL Recording Rules
+# Project: Linux System Monitoring & Reliability Lab
+# Role: Agent 8 (Senior Observability Engineer - Centralized Logging)
+# Namespace: fake (Default tenant in single-tenant Loki)
+# ==============================================================================
+
+groups:
+  - name: logging_recording_rules
+    interval: 30s
+    rules:
+      # Pre-compute system-wide error log rates across jobs
+      - record: job:level_error:rate5m
+        expr: |
+          sum by (job, level) (
+            rate({job=~".+", level=~"err|error|crit|alert|emerg|ERROR|CRITICAL"}[5m])
+          )
+
+      # Pre-compute error rates per systemd unit for anomaly detection
+      - record: unit:level_error:rate5m
+        expr: |
+          sum by (unit) (
+            rate({job="systemd-journal", level=~"err|error|crit|alert|emerg"}[5m])
+          )
+
+      # Pre-compute log byte ingestion rate for volume tracking
+      - record: job:log_bytes:rate5m
+        expr: |
+          sum by (job) (
+            bytes_rate({job=~".+"}[5m])
+          )
+
+      # Pre-compute SSH failed authentication rate
+      - record: ssh:failed_login:rate5m
+        expr: |
+          sum(
+            rate({job="systemd-journal", unit="ssh.service"} |= "Failed password"[5m])
+          )
+
+      # Pre-compute Python agent exception rate
+      - record: python_agent:exceptions:rate5m
+        expr: |
+          sum by (logger) (
+            rate({job="python-agent"} |= "exception"[5m])
+          )

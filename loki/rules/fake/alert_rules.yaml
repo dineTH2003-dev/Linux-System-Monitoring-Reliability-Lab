@@ -1,0 +1,96 @@
+# ==============================================================================
+# Loki LogQL Alerting Rules
+# Project: Linux System Monitoring & Reliability Lab
+# Role: Agent 8 (Senior Observability Engineer - Centralized Logging)
+# Namespace: fake (Default tenant in single-tenant Loki)
+# ==============================================================================
+
+groups:
+  - name: logging_alert_rules
+    interval: 30s
+    rules:
+      # 1. Systemd Service Failure / Crash Loop
+      - alert: HostServiceFailureDetected
+        expr: |
+          sum by (unit) (
+            rate({job="systemd-journal", level=~"err|error|crit|alert|emerg"} [5m])
+          ) > 0.2
+        for: 2m
+        labels:
+          severity: warning
+          component: systemd
+          environment: lab
+        annotations:
+          summary: "Elevated error log rate detected in {{ $labels.unit }}"
+          description: "Systemd unit {{ $labels.unit }} is logging errors at {{ $value | humanize }} lines/sec over 5 minutes."
+
+      # 2. SSH Brute Force Authentication Attack
+      - alert: SSHBruteForceAttack
+        expr: |
+          sum(
+            rate({job="systemd-journal", unit="ssh.service"} |= "Failed password" [5m])
+          ) > 0.1
+        for: 1m
+        labels:
+          severity: critical
+          component: ssh
+          environment: lab
+        annotations:
+          summary: "SSH brute-force authentication attempts detected"
+          description: "SSH daemon is observing failed login attempts at rate {{ $value | humanize }} attempts/sec."
+
+      # 3. Kernel Out-Of-Memory (OOM) Killer Execution
+      - alert: KernelOOMKillerTriggered
+        expr: |
+          count_over_time({job="systemd-journal", transport="kernel"} |= "Out of memory" [10m]) > 0
+        for: 0m
+        labels:
+          severity: critical
+          component: kernel
+          environment: lab
+        annotations:
+          summary: "Linux kernel OOM killer was invoked"
+          description: "Kernel invoked Out of Memory (OOM) killer to terminate memory-hungry processes."
+
+      # 4. Storage / Filesystem I/O Error Detected
+      - alert: FilesystemIOErrorDetected
+        expr: |
+          count_over_time({job="systemd-journal", transport="kernel"} |~ "(?i)(I/O error|remounting filesystem read-only|EXT4-fs error|XFS error)" [5m]) > 0
+        for: 0m
+        labels:
+          severity: critical
+          component: storage
+          environment: lab
+        annotations:
+          summary: "Kernel filesystem or block I/O error detected"
+          description: "Kernel logged disk or filesystem corruption/error event."
+
+      # 5. Python Monitoring Agent Scrape / Execution Failure
+      - alert: PythonMonitoringAgentErrors
+        expr: |
+          sum by (logger) (
+            rate({job="python-agent", level=~"ERROR|CRITICAL"} [5m])
+          ) > 0.05
+        for: 2m
+        labels:
+          severity: warning
+          component: python_agent
+          environment: lab
+        annotations:
+          summary: "Python monitoring agent logging frequent errors"
+          description: "Collector logger {{ $labels.logger }} has sustained error logging rate of {{ $value | humanize }} err/sec."
+
+      # 6. High System Log Volume (Log Flood Anomaly)
+      - alert: SystemLogFlooding
+        expr: |
+          sum by (job) (
+            rate({job=~".+"} [2m])
+          ) > 100
+        for: 2m
+        labels:
+          severity: warning
+          component: logging
+          environment: lab
+        annotations:
+          summary: "Log flood anomaly detected in job {{ $labels.job }}"
+          description: "Log volume for job {{ $labels.job }} exceeds 100 lines/sec, potential spam or loop."
