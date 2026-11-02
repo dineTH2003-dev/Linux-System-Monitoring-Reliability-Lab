@@ -1,0 +1,37 @@
+# Docker Compose: Alertmanager Incident Management Stack
+# Project: Linux System Monitoring & Reliability Lab
+# Principle: Isolated container deployment preserving native host services
+
+services:
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    container_name: lab-alertmanager
+    restart: unless-stopped
+    ports:
+      # Isolated loopback port mapping: Host 9093 -> Container 9093
+      - "127.0.0.1:9093:9093"
+    volumes:
+      - ./alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - ./templates:/etc/alertmanager/templates:ro
+      - alertmanager_data:/alertmanager
+    command:
+      - --config.file=/etc/alertmanager/alertmanager.yml
+      - --storage.path=/alertmanager
+      - --web.listen-address=0.0.0.0:9093
+      - --cluster.listen-address=
+    networks:
+      - prometheus_default
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:9093/-/healthy || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+volumes:
+  alertmanager_data:
+    name: lab_alertmanager_data
+
+networks:
+  prometheus_default:
+    external: true
