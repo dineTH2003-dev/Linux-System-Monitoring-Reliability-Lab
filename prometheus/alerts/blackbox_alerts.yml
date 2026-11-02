@@ -1,0 +1,98 @@
+# Prometheus Blackbox Synthetic Probing Alert Rules
+# Project: Linux System Monitoring & Reliability Lab
+# Role: Agent 7 (Senior SRE - Incident Detection & Blackbox Monitoring)
+# Grounding: Prometheus Blackbox Exporter metrics (probe_success, probe_duration_seconds, probe_http_status_code, probe_ssl_earliest_cert_expiry)
+
+groups:
+  - name: blackbox_endpoint_alerts
+    interval: 15s
+    rules:
+      - alert: BlackboxEndpointDown
+        expr: probe_success == 0
+        for: 1m
+        labels:
+          severity: critical
+          subsystem: blackbox
+          category: availability
+          impact: endpoint_unreachable
+        annotations:
+          summary: "Synthetic probe failed: endpoint {{ $labels.instance }} is down"
+          description: "Blackbox probe of type '{{ $labels.probe_type }}' against {{ $labels.instance }} has failed for >1 minute. Target service is unreachable or rejecting connections."
+          diagnostic_context: "Check network route, listening socket, firewall rules, and target service daemon."
+          diagnostic_command: "curl -iv {{ $labels.instance }} || nc -zv {{ $labels.instance }}"
+          runbook_url: "docs/troubleshooting/blackbox-probe.md"
+
+      - alert: BlackboxHttpProbeFailed
+        expr: (probe_http_status_code <= 199 or probe_http_status_code >= 400) and probe_success == 0
+        for: 1m
+        labels:
+          severity: critical
+          subsystem: blackbox
+          category: availability
+          impact: http_error_response
+        annotations:
+          summary: "HTTP probe failure: {{ $labels.instance }} returned HTTP {{ $value }}"
+          description: "Blackbox HTTP probe against {{ $labels.instance }} returned non-2xx status code {{ $value }}. Application is returning errors (5xx/4xx) or redirect loop."
+          diagnostic_context: "Inspect web server / reverse proxy access logs and backend health."
+          diagnostic_command: "curl -sI {{ $labels.instance }}"
+          runbook_url: "docs/troubleshooting/blackbox-probe.md"
+
+      - alert: BlackboxProbeLatencyHigh
+        expr: probe_duration_seconds > 1.0
+        for: 3m
+        labels:
+          severity: warning
+          subsystem: blackbox
+          category: latency
+          impact: slow_endpoint_response
+        annotations:
+          summary: "High synthetic probe response latency on {{ $labels.instance }} ({{ $value | printf \"%.2f\" }}s)"
+          description: "Probe duration for {{ $labels.instance }} is {{ $value | printf \"%.2f\" }}s (>1.0s) sustained over 3 minutes. Degraded user experience or backend queueing."
+          diagnostic_context: "Examine probe phase durations (DNS, TCP connect, TLS handshake, processing)."
+          diagnostic_command: "curl -w '@curl-format.txt' -o /dev/null -s {{ $labels.instance }}"
+          runbook_url: "docs/troubleshooting/blackbox-probe.md"
+
+      - alert: BlackboxProbeSlowCritical
+        expr: probe_duration_seconds > 3.0
+        for: 1m
+        labels:
+          severity: critical
+          subsystem: blackbox
+          category: latency
+          impact: severe_latency_or_near_timeout
+        annotations:
+          summary: "Critical probe latency on {{ $labels.instance }} ({{ $value | printf \"%.2f\" }}s)"
+          description: "Probe duration for {{ $labels.instance }} is {{ $value | printf \"%.2f\" }}s (>3.0s), approaching probe timeout (5.0s). Near total transaction stalls."
+          diagnostic_context: "Backend worker thread starvation or database lock contention."
+          diagnostic_command: "curl -s -w 'time_connect: %{time_connect}s\ntime_starttransfer: %{time_starttransfer}s\ntime_total: %{time_total}s\n' -o /dev/null {{ $labels.instance }}"
+          runbook_url: "docs/troubleshooting/blackbox-probe.md"
+
+      - alert: BlackboxSslCertExpiring
+        expr: (probe_ssl_earliest_cert_expiry - time()) < (86400 * 14) and probe_ssl_earliest_cert_expiry > 0
+        for: 1h
+        labels:
+          severity: warning
+          subsystem: blackbox
+          category: security
+          impact: tls_certificate_expiration
+        annotations:
+          summary: "TLS certificate for {{ $labels.instance }} expires in {{ $value | humanizeDuration }}"
+          description: "The SSL/TLS certificate for {{ $labels.instance }} expires in less than 14 days ({{ $value | humanizeDuration }}). Renew certificate immediately to prevent browser security blocks."
+          diagnostic_context: "Check ACME / certbot renewal timers or manual certificate provisioning."
+          diagnostic_command: "openssl s_client -servername {{ $labels.instance }} -connect {{ $labels.instance }}:443 </dev/null 2>/dev/null | openssl x509 -noout -dates"
+          runbook_url: "docs/troubleshooting/ssl-certificate.md"
+
+      - alert: BlackboxTcpConnectFailed
+        expr: probe_success{probe_type="tcp"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          subsystem: blackbox
+          category: availability
+          impact: tcp_connection_refused
+        annotations:
+          summary: "TCP connect probe failed for {{ $labels.instance }}"
+          description: "Synthetic TCP handshake to {{ $labels.instance }} failed for >1 minute. Port closed, service crashed, or iptables drop."
+          diagnostic_context: "Verify target port is in LISTEN state on host."
+          diagnostic_command: "ss -tulpn | grep -E '22|9100|9101|9090|9093'"
+          runbook_url: "docs/troubleshooting/blackbox-probe.md"
