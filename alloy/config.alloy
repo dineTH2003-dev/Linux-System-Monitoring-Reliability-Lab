@@ -1,0 +1,116 @@
+// ==============================================================================
+// Grafana Alloy Centralized Logging Pipeline
+// Project: Linux System Monitoring & Reliability Lab
+// Role: Agent 8 (Senior Observability Engineer - Centralized Logging)
+// Target Version: Grafana Alloy v1.0.0
+// Principles: Cardinality Bounds, Sensitive Data Redaction, Least Privilege
+//
+// Ingestion Architecture:
+// Host systemd journal logs are harvested directly from /var/log/journal.
+// This captures all native host services (ssh, cron, kernel) as well as the
+// Python Monitoring Agent (SyslogIdentifier=linux-monitoring-agent) without
+// requiring Docker daemon socket exposure or arbitrary host file mounts.
+// ==============================================================================
+
+// ------------------------------------------------------------------------------
+// 1. Loki Push Endpoint
+// ------------------------------------------------------------------------------
+loki.write "default" {
+	endpoint {
+		url        = "http://loki:3100/loki/api/v1/push"
+		batch_wait = "1s"
+		batch_size = "1MiB"
+	}
+}
+
+// ------------------------------------------------------------------------------
+// 2. Linux Host Systemd Journal Collection
+// ------------------------------------------------------------------------------
+loki.source.journal "systemd" {
+	max_age    = "12h"
+	path       = "/var/log/journal"
+	forward_to = [loki.relabel.journal_filter.receiver]
+	labels     = {
+		job         = "systemd-journal",
+		environment = "lab",
+		host        = constants.hostname,
+	}
+}
+
+// Relabel rules for systemd journal: promote low-cardinality metadata and drop noise
+loki.relabel "journal_filter" {
+	forward_to = [loki.process.journal_sanitization.receiver]
+
+	// Extract standard systemd unit name into 'unit' label
+	rule {
+		source_labels = ["__journal__systemd_unit"]
+		target_label  = "unit"
+	}
+
+	// Extract syslog identifier if unit is missing (e.g. linux-monitoring-agent)
+	rule {
+		source_labels = ["unit", "__journal_syslog_identifier"]
+		regex         = ";(.*)"
+		target_label  = "unit"
+	}
+
+	// Extract syslog priority keyword into standard 'level' label
+	rule {
+		source_labels = ["__journal_priority_keyword"]
+		target_label  = "level"
+	}
+
+	// Extract kernel vs userland transport
+	rule {
+		source_labels = ["__journal__transport"]
+		target_label  = "transport"
+	}
+
+	// Privacy & Safety: Drop user desktop sessions and desktop utility noise
+	rule {
+		source_labels = ["unit"]
+		regex         = "user@.*\\.service|session-.*\\.scope|conky.*|pipewire.*|gnome-.*|pulseaudio.*"
+		action        = "drop"
+	}
+
+	// Safety: Ensure bounded label set (drop dynamic unbounded process identifiers)
+	rule {
+		regex  = "__journal__pid|__journal__uid|__journal__gid|__journal_code_file|__journal_code_line"
+		action = "labeldrop"
+	}
+}
+
+// Sanitization & privacy scrubbing pipeline for systemd journal
+loki.process "journal_sanitization" {
+	forward_to = [loki.write.default.receiver]
+
+	// Redact cleartext passwords, tokens, API keys, and bearer credentials
+	stage.replace {
+		expression = "(?i)(password|passwd|pwd|secret|token|api[_-]?key|bearer)\\s*[:=]\\s*([\"']?)([^\\s\"',;]+)([\"']?)"
+		replace    = "$1=[REDACTED]"
+	}
+
+	// Redact HTTP Authorization headers
+	stage.replace {
+		expression = "(?i)Authorization:\\s*(Bearer\\s+)?[a-zA-Z0-9_\\-\\.]+"
+		replace    = "Authorization: [REDACTED]"
+	}
+
+	// Redact sensitive command-line arguments (--password, --token, --api-key)
+	stage.replace {
+		expression = "(?i)(--password|--token|--api-key|--secret)\\s+([^\\s]+)"
+		replace    = "$1 [REDACTED]"
+	}
+
+	// Redact session cookies and session tokens
+	stage.replace {
+		expression = "(?i)(session_id|sessionid|connect\\.sid)=([^\\s;,]+)"
+		replace    = "$1=[REDACTED]"
+	}
+
+	// Privacy Safeguard: Mask personal user document paths in /home
+	stage.replace {
+		expression = "/home/[a-zA-Z0-9_-]+"
+		replace    = "/home/[REDACTED_USER]"
+	}
+}
