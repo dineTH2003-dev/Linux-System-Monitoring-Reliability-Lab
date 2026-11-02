@@ -1,0 +1,372 @@
+# Prometheus Infrastructure Alert Rules
+# Project: Linux System Monitoring & Reliability Lab
+# Role: Agent 7 (Senior SRE - Incident Detection & Alert Engineering)
+# Grounding: Linux kernel counters via Node Exporter and Custom Python Agent
+# SRE Principles: Symptom-based detection, sustained durations, justifiable thresholds, diagnostic context.
+
+groups:
+  - name: host_availability_alerts
+    interval: 15s
+    rules:
+      - alert: HostUnavailable
+        expr: (up{job="node"} == 0 and on(instance) up{job="python-agent"} == 0) or (probe_success{job="blackbox-icmp"} == 0)
+        for: 2m
+        labels:
+          severity: critical
+          subsystem: host
+          category: availability
+          impact: host_telemetry_blackout
+        annotations:
+          summary: "Host {{ $labels.instance }} is unavailable or unreachable"
+          description: "All telemetry exporters (node, python-agent) or ICMP ping probes for {{ $labels.instance }} have been down for >2 minutes. Possible power loss, kernel panic, or network partition."
+          diagnostic_context: "Check host power, console log, and hypervisor/network routing."
+          diagnostic_command: "ping -c 3 rubi && ip neigh"
+          runbook_url: "docs/troubleshooting/host-unavailable.md"
+
+      - alert: NodeExporterUnavailable
+        expr: up{job="node"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          subsystem: observability
+          category: exporter_health
+          impact: kernel_telemetry_loss
+        annotations:
+          summary: "Node Exporter scrape failure on {{ $labels.instance }}"
+          description: "Prometheus has failed to scrape Node Exporter at {{ $labels.instance }} (:9100) for >2 minutes. Host hardware and kernel metrics are unobserved."
+          diagnostic_context: "Daemon crash, port blockage, or OOM kill of node_exporter binary."
+          diagnostic_command: "systemctl status prometheus-node-exporter.service"
+          runbook_url: "docs/troubleshooting/target-down.md"
+
+      - alert: PythonAgentUnavailable
+        expr: up{job="python-agent"} == 0
+        for: 2m
+        labels:
+          severity: warning
+          subsystem: custom_agent
+          category: exporter_health
+          impact: custom_telemetry_loss
+        annotations:
+          summary: "Custom Python monitoring agent down on {{ $labels.instance }}"
+          description: "Prometheus has failed to scrape the Python monitoring agent at {{ $labels.instance }} (:9101) for >2 minutes. High-resolution process and systemd custom metrics are unavailable."
+          diagnostic_context: "Python process terminated, unhandled exception, or port conflict."
+          diagnostic_command: "ps aux | grep 'agent/main.py' && curl -s http://127.0.0.1:9101/metrics | head -n 5"
+          runbook_url: "docs/troubleshooting/custom-agent.md"
+
+  - name: compute_alerts
+    interval: 15s
+    rules:
+      - alert: HostHighCpuUtilizationWarning
+        expr: (100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)) > 85
+        for: 5m
+        labels:
+          severity: warning
+          subsystem: cpu
+          category: saturation
+          impact: processing_delay
+        annotations:
+          summary: "Elevated CPU utilization on {{ $labels.instance }} ({{ $value | printf \"%.1f\" }}%)"
+          description: "Active CPU utilization averaged {{ $value | printf \"%.1f\" }}% across all cores over a 5-minute moving window. Approaching saturation threshold."
+          diagnostic_context: "Identify high-consuming threads and run-queue contention."
+          diagnostic_command: "top -b -n 1 -o %CPU | head -n 20"
+          runbook_url: "docs/troubleshooting/cpu-saturation.md"
+
+      - alert: HostHighCpuUtilizationCritical
+        expr: (100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[3m])) * 100)) > 95
+        for: 3m
+        labels:
+          severity: critical
+          subsystem: cpu
+          category: saturation
+          impact: severe_service_degradation
+        annotations:
+          summary: "Critical CPU saturation on {{ $labels.instance }} ({{ $value | printf \"%.1f\" }}%)"
+          description: "Total compute capacity is {{ $value | printf \"%.1f\" }}% utilized for >3 minutes. Host has virtually zero compute headroom; latency-sensitive tasks will stall."
+          diagnostic_context: "Inspect top CPU hogs or rogue compilation/crypto tasks."
+          diagnostic_command: "ps -eo pid,ppid,cmd,%cpu --sort=-%cpu | head -n 15"
+          runbook_url: "docs/troubleshooting/cpu-saturation.md"
+
+      - alert: HostCpuPressureHigh
+        expr: rate(node_pressure_cpu_waiting_seconds_total[2m]) * 100 > 25
+        for: 5m
+        labels:
+          severity: warning
+          subsystem: cpu
+          category: saturation
+          impact: scheduling_delay
+        annotations:
+          summary: "High CPU scheduling pressure on {{ $labels.instance }} ({{ $value | printf \"%.1f\" }}%)"
+          description: "Linux Pressure Stall Information (PSI) shows tasks spending {{ $value | printf \"%.1f\" }}% of wall-clock time waiting in run-queues for an available CPU core."
+          diagnostic_context: "Excessive runnable threads competing for CPU time slices."
+          diagnostic_command: "cat /proc/pressure/cpu"
+          runbook_url: "docs/troubleshooting/cpu-pressure.md"
+
+  - name: memory_alerts
+    interval: 15s
+    rules:
+      - alert: HostLowMemoryAvailable
+        expr: (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) < 0.10
+        for: 5m
+        labels:
+          severity: warning
+          subsystem: memory
+          category: capacity
+          impact: page_cache_eviction
+        annotations:
+          summary: "Low available physical memory on {{ $labels.instance }} ({{ $value | humanizePercentage }})"
+          description: "Kernel MemAvailable is under 10% of total physical RAM (currently {{ $value | humanizePercentage }}). Background reclaim is accelerating."
+          diagnostic_context: "Page cache dropping; disk I/O may increase as filesystem cache shrinks."
+          diagnostic_command: "free -m && ps -eo pid,ppid,cmd,%mem --sort=-%mem | head -n 15"
+          runbook_url: "docs/troubleshooting/memory-starvation.md"
+
+      - alert: HostCriticalMemoryAvailable
+        expr: (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) < 0.05
+        for: 2m
+        labels:
+          severity: critical
+          subsystem: memory
+          category: capacity
+          impact: oom_kill_imminent
+        annotations:
+          summary: "Critical memory exhaustion on {{ $labels.instance }} ({{ $value | humanizePercentage }})"
+          description: "Kernel MemAvailable has fallen below 5% (currently {{ $value | humanizePercentage }}). Kernel Out-Of-Memory (OOM) killer invocation is imminent."
+          diagnostic_context: "Emergency memory starvation. Direct reclaim failing to meet allocation requests."
+          diagnostic_command: "free -h && vmstat 1 5 && dmesg -T | grep -i oom | tail -n 10"
+          runbook_url: "docs/troubleshooting/memory-starvation.md"
+
+      - alert: HostMemoryPressureWaiting
+        expr: rate(node_pressure_memory_waiting_seconds_total[1m]) * 100 > 20
+        for: 3m
+        labels:
+          severity: warning
+          subsystem: memory
+          category: pressure
+          impact: memory_allocation_delay
+        annotations:
+          summary: "Elevated memory allocation stall on {{ $labels.instance }} ({{ $value | printf \"%.1f\" }}%)"
+          description: "Kernel PSI shows tasks are spending {{ $value | printf \"%.1f\" }}% of wall-clock time stalled in direct page reclaim or swap-in."
+          diagnostic_context: "Working set exceeds physical RAM; memory subsystem struggling to free pages."
+          diagnostic_command: "cat /proc/pressure/memory"
+          runbook_url: "docs/troubleshooting/memory-pressure.md"
+
+      - alert: HostMemoryPressureStalled
+        expr: rate(node_pressure_memory_stalled_seconds_total[1m]) * 100 > 10
+        for: 2m
+        labels:
+          severity: critical
+          subsystem: memory
+          category: pressure
+          impact: execution_paralysis
+        annotations:
+          summary: "Severe memory thrashing stall on {{ $labels.instance }} ({{ $value | printf \"%.1f\" }}%)"
+          description: "Kernel PSI 'full' shows that ALL non-idle tasks are simultaneously stalled on memory allocation {{ $value | printf \"%.1f\" }}% of the time."
+          diagnostic_context: "System is in acute memory thrashing; complete execution freeze."
+          diagnostic_command: "cat /proc/pressure/memory && vmstat -s"
+          runbook_url: "docs/troubleshooting/memory-pressure.md"
+
+      - alert: HostSwapThrashingActive
+        expr: ((rate(node_vmstat_pswpin[1m]) + rate(node_vmstat_pswpout[1m])) * 4096 > 10485760) and ((node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) < 0.15)
+        for: 3m
+        labels:
+          severity: warning
+          subsystem: swap
+          category: thrashing
+          impact: high_latency_spikes
+        annotations:
+          summary: "Active swap thrashing detected on {{ $labels.instance }}"
+          description: "Swap I/O throughput exceeds 10 MB/s while available RAM is under 15%. Active working sets are being evicted to disk."
+          diagnostic_context: "Distinguishes cold static swap from dynamic latency-inducing swap churn."
+          diagnostic_command: "vmstat 1 5 && swapon --show"
+          runbook_url: "docs/troubleshooting/swap-thrashing.md"
+
+  - name: storage_alerts
+    interval: 15s
+    rules:
+      - alert: HostFilesystemSpaceWarning
+        expr: (node_filesystem_avail_bytes{fstype=~"ext4|xfs"} / node_filesystem_size_bytes{fstype=~"ext4|xfs"}) < 0.15
+        for: 10m
+        labels:
+          severity: warning
+          subsystem: storage
+          category: capacity
+          impact: capacity_depletion
+        annotations:
+          summary: "Low filesystem space on {{ $labels.mountpoint }} ({{ $value | humanizePercentage }})"
+          description: "Filesystem {{ $labels.mountpoint }} on {{ $labels.device }} has {{ $value | humanizePercentage }} available space remaining for unprivileged processes."
+          diagnostic_context: "Excludes read-only snaps and virtual filesystems. Threshold <15% for 10m."
+          diagnostic_command: "df -hT {{ $labels.mountpoint }}"
+          runbook_url: "docs/troubleshooting/disk-capacity.md"
+
+      - alert: HostFilesystemSpaceCritical
+        expr: (node_filesystem_avail_bytes{fstype=~"ext4|xfs"} / node_filesystem_size_bytes{fstype=~"ext4|xfs"}) < 0.05
+        for: 3m
+        labels:
+          severity: critical
+          subsystem: storage
+          category: capacity
+          impact: enospc_write_failures
+        annotations:
+          summary: "Critical filesystem space on {{ $labels.mountpoint }} ({{ $value | humanizePercentage }})"
+          description: "Filesystem {{ $labels.mountpoint }} has only {{ $value | humanizePercentage }} capacity remaining. Imminent ENOSPC write failures for applications and logging."
+          diagnostic_context: "Check for unlinked open files (lsof +L1) or rapidly growing log directories."
+          diagnostic_command: "du -xh --max-depth=2 {{ $labels.mountpoint }} | sort -hr | head -n 10"
+          runbook_url: "docs/troubleshooting/disk-capacity.md"
+
+      - alert: HostFilesystemFillRatePredict
+        expr: predict_linear(node_filesystem_avail_bytes{fstype=~"ext4|xfs"}[1h], 4 * 3600) < 0 and (node_filesystem_avail_bytes{fstype=~"ext4|xfs"} / node_filesystem_size_bytes{fstype=~"ext4|xfs"}) < 0.25
+        for: 15m
+        labels:
+          severity: warning
+          subsystem: storage
+          category: trend
+          impact: predictive_exhaustion
+        annotations:
+          summary: "Filesystem {{ $labels.mountpoint }} projected to exhaust within 4 hours"
+          description: "Based on 1-hour linear regression, filesystem {{ $labels.mountpoint }} will fill completely in under 4 hours at the current consumption rate."
+          diagnostic_context: "Proactive trend alert. Catch rogue logs or run-away dumps before capacity breach."
+          diagnostic_command: "journalctl --disk-usage && find {{ $labels.mountpoint }} -xdev -type f -mmin -60 -size +50M"
+          runbook_url: "docs/troubleshooting/disk-capacity.md"
+
+      - alert: HostInodeExhaustionWarning
+        expr: (node_filesystem_files_free{fstype=~"ext4|xfs"} / node_filesystem_files{fstype=~"ext4|xfs"}) < 0.10
+        for: 10m
+        labels:
+          severity: warning
+          subsystem: storage
+          category: inodes
+          impact: inode_table_saturation
+        annotations:
+          summary: "High inode consumption on {{ $labels.mountpoint }} ({{ $value | humanizePercentage }})"
+          description: "Filesystem {{ $labels.mountpoint }} has only {{ $value | humanizePercentage }} free inodes remaining. High density of small files, temporary files, or un-rotated logs."
+          diagnostic_context: "File creation fails when inodes exhaust even if storage byte capacity remains."
+          diagnostic_command: "df -i {{ $labels.mountpoint }}"
+          runbook_url: "docs/troubleshooting/disk-inodes.md"
+
+      - alert: HostInodeExhaustionCritical
+        expr: (node_filesystem_files_free{fstype=~"ext4|xfs"} / node_filesystem_files{fstype=~"ext4|xfs"}) < 0.02
+        for: 3m
+        labels:
+          severity: critical
+          subsystem: storage
+          category: inodes
+          impact: file_creation_failure
+        annotations:
+          summary: "Critical inode exhaustion on {{ $labels.mountpoint }} ({{ $value | humanizePercentage }})"
+          description: "Filesystem {{ $labels.mountpoint }} has only {{ $value | humanizePercentage }} free inodes left. New file creation will fail immediately with ENOSPC."
+          diagnostic_context: "Inspect directories containing excessive file counts."
+          diagnostic_command: "find {{ $labels.mountpoint }} -xdev -type d -exec echo -n '{}: ' \\; -exec ls -1 {} \\; | wc -l"
+          runbook_url: "docs/troubleshooting/disk-inodes.md"
+
+  - name: disk_io_alerts
+    interval: 15s
+    rules:
+      - alert: HostDiskReadLatencyHigh
+        expr: (rate(node_disk_read_time_seconds_total{device=~"nvme.*|sd.*|vd.*"}[1m]) / clamp_min(rate(node_disk_reads_completed_total{device=~"nvme.*|sd.*|vd.*"}[1m]), 0.001)) > 0.030
+        for: 5m
+        labels:
+          severity: warning
+          subsystem: disk_io
+          category: latency
+          impact: read_service_time_degradation
+        annotations:
+          summary: "High disk read latency on {{ $labels.device }} ({{ $value | humanizeDuration }})"
+          description: "Average disk read latency (r_await) on {{ $labels.device }} is {{ $value | humanizeDuration }} (>30ms) for 5 minutes. Storage queue saturation or slow NAND controller."
+          diagnostic_context: "Correlate with IOPS, byte throughput, and I/O pressure stall."
+          diagnostic_command: "iostat -xz 1 5"
+          runbook_url: "docs/troubleshooting/disk-latency.md"
+
+      - alert: HostDiskWriteLatencyHigh
+        expr: (rate(node_disk_write_time_seconds_total{device=~"nvme.*|sd.*|vd.*"}[1m]) / clamp_min(rate(node_disk_writes_completed_total{device=~"nvme.*|sd.*|vd.*"}[1m]), 0.001)) > 0.050
+        for: 5m
+        labels:
+          severity: warning
+          subsystem: disk_io
+          category: latency
+          impact: write_queue_stall
+        annotations:
+          summary: "High disk write latency on {{ $labels.device }} ({{ $value | humanizeDuration }})"
+          description: "Average disk write latency (w_await) on {{ $labels.device }} is {{ $value | humanizeDuration }} (>50ms) for 5 minutes. Journal flushing or sync write bottlenecks."
+          diagnostic_context: "Check write cache, page writeback flushes, and background sync."
+          diagnostic_command: "iostat -xz 1 5 && grep -i dirty /proc/meminfo"
+          runbook_url: "docs/troubleshooting/disk-latency.md"
+
+      - alert: HostIoPressureWaitingHigh
+        expr: rate(node_pressure_io_waiting_seconds_total[2m]) * 100 > 25
+        for: 5m
+        labels:
+          severity: warning
+          subsystem: disk_io
+          category: pressure
+          impact: storage_queue_starvation
+        annotations:
+          summary: "High I/O pressure on {{ $labels.instance }} ({{ $value | printf \"%.1f\" }}%)"
+          description: "Linux PSI reports tasks spending {{ $value | printf \"%.1f\" }}% of wall-clock time waiting on storage I/O completion."
+          diagnostic_context: "I/O subsystem is saturated; threads entering uninterruptible sleep (D state)."
+          diagnostic_command: "cat /proc/pressure/io && ps -eo pid,stat,cmd | grep ' D'"
+          runbook_url: "docs/troubleshooting/io-pressure.md"
+
+      - alert: HostIoPressureStalledCritical
+        expr: rate(node_pressure_io_stalled_seconds_total[1m]) * 100 > 10
+        for: 2m
+        labels:
+          severity: critical
+          subsystem: disk_io
+          category: pressure
+          impact: system_wide_io_lockup
+        annotations:
+          summary: "Critical I/O stall on {{ $labels.instance }} ({{ $value | printf \"%.1f\" }}%)"
+          description: "Linux PSI 'full' indicates that all non-idle tasks are stalled on storage I/O {{ $value | printf \"%.1f\" }}% of the time. Block device lockup or un-flushed write buffer stall."
+          diagnostic_context: "Acute block layer freeze. Investigate storage controller and kernel dmesg."
+          diagnostic_command: "cat /proc/pressure/io && dmesg -T | grep -i 'blocked for more than' | tail -n 5"
+          runbook_url: "docs/troubleshooting/io-pressure.md"
+
+  - name: network_alerts
+    interval: 15s
+    rules:
+      - alert: HostNetworkDropsHigh
+        expr: sum by (instance, device) (rate(node_network_receive_drop_total{device!~"lo|docker.*|veth.*"}[1m]) + rate(node_network_transmit_drop_total{device!~"lo|docker.*|veth.*"}[1m])) > 10
+        for: 5m
+        labels:
+          severity: warning
+          subsystem: network
+          category: degradation
+          impact: packet_drop_retransmissions
+        annotations:
+          summary: "Elevated network packet drop rate on {{ $labels.device }} ({{ $value | printf \"%.1f\" }} drops/s)"
+          description: "Interface {{ $labels.device }} is experiencing {{ $value | printf \"%.1f\" }} packet drops/s. Ring buffer overflow or kernel backlog saturation."
+          diagnostic_context: "Check NIC ring buffers and socket listen backlogs."
+          diagnostic_command: "ip -s link show {{ $labels.device }} && ethtool -S {{ $labels.device }} 2>/dev/null | grep -i drop"
+          runbook_url: "docs/troubleshooting/network-errors.md"
+
+      - alert: HostNetworkErrorsDetected
+        expr: sum by (instance, device) (rate(node_network_receive_errs_total{device!~"lo|docker.*|veth.*"}[1m]) + rate(node_network_transmit_errs_total{device!~"lo|docker.*|veth.*"}[1m])) > 0
+        for: 2m
+        labels:
+          severity: critical
+          subsystem: network
+          category: degradation
+          impact: data_corruption_retransmissions
+        annotations:
+          summary: "Network interface packet errors on {{ $labels.device }}"
+          description: "Interface {{ $labels.device }} is reporting active packet errors (CRC checksum failures, frame align, or FIFO overruns)."
+          diagnostic_context: "Physical layer degradation, faulty cable, or driver firmware issue."
+          diagnostic_command: "ip -s link show {{ $labels.device }}"
+          runbook_url: "docs/troubleshooting/network-errors.md"
+
+  - name: service_alerts
+    interval: 15s
+    rules:
+      - alert: HostCriticalServiceDown
+        expr: node_systemd_unit_state{name=~"ssh.service|docker.service|systemd-journald.service|prometheus.service|prometheus-node-exporter.service", state="active"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          subsystem: systemd
+          category: availability
+          impact: critical_service_outage
+        annotations:
+          summary: "Critical systemd service down: {{ $labels.name }}"
+          description: "Essential host service {{ $labels.name }} is not in 'active' state on {{ $labels.instance }}. Immediate operator triage required."
+          diagnostic_context: "Verify service unit journal for crash or exit status."
+          diagnostic_command: "systemctl status {{ $labels.name }} && journalctl -u {{ $labels.name }} -n 25 --no-pager"
+          runbook_url: "docs/troubleshooting/systemd-unit.md"
