@@ -1,0 +1,113 @@
+# Promtool Unit Tests for SRE Rules
+# Project: Linux System Monitoring & Reliability Lab
+# Specification: Synthetic verification of SLIs, error budget burn rates, and multi-window alerting
+# Author: Senior Site Reliability Engineer (Agent 9)
+
+rule_files:
+  - ../rules/sre_rules.yml
+
+evaluation_interval: 15s
+
+tests:
+  # Test 1: SRE Availability SLI & Error Budget Calculation
+  - interval: 15s
+    input_series:
+      # Simulate 100% availability for first 4m, then total failure
+      - series: 'up{job="node",instance="rubi"}'
+        values: '1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0'
+    promql_expr_test:
+      - eval_time: 3m
+        expr: instance:node_exporter_availability:ratio5m{instance="rubi"}
+        exp_samples:
+          - labels: 'instance:node_exporter_availability:ratio5m{component="node_exporter",instance="rubi",job="node",sli_type="availability",subsystem="sre_sli"}'
+            value: 1.0
+
+  # Test 2: Rapid Burn Rate Alert (14.4x) over 1h and 5m
+  # Budget: 0.005 (99.5% SLO). If up=0 for 5m, error rate = 1.0. Burn rate = 1.0 / 0.005 = 200.0 (> 14.4)
+  - interval: 15s
+    input_series:
+      # Host goes down completely for 20 ticks (5 minutes)
+      - series: 'up{job="node",instance="rubi"}'
+        values: '0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0'
+    promql_expr_test:
+      - eval_time: 3m
+        expr: instance:node_exporter_burn_rate:5m{instance="rubi"}
+        exp_samples:
+          - labels: 'instance:node_exporter_burn_rate:5m{component="node_exporter",instance="rubi",job="node",subsystem="sre_burn_rate"}'
+            value: 200.0
+      - eval_time: 3m
+        expr: instance:node_exporter_error_budget_remaining:percent30d{instance="rubi"}
+        exp_samples:
+          - labels: 'instance:node_exporter_error_budget_remaining:percent30d{component="node_exporter",instance="rubi",job="node",subsystem="sre_budget"}'
+            value: 0.0
+    alert_rule_test:
+      - eval_time: 1m
+        alertname: HostTelemetryErrorBudgetBurnCritical
+        exp_alerts: [] # Pending (for: 2m)
+      - eval_time: 3m
+        alertname: HostTelemetryErrorBudgetBurnCritical
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              subsystem: sre_burn_rate
+              component: node_exporter
+              category: availability
+              job: node
+              instance: rubi
+            exp_annotations:
+              summary: "Critical Host Telemetry Error Budget Burn Rate (14.4x) on rubi"
+              description: "Node Exporter error budget is burning at 14.4x over both 1h and 5m windows. 2% of monthly budget consumed in 1 hour. Entire budget exhausted in 50 hours."
+              runbook_url: "docs/sre/error-budget-policy.md"
+
+  # Test 3: Alert Clearing on Recovery (Short Window Reset)
+  - interval: 15s
+    input_series:
+      # Host was down for 12 ticks (3m), then recovers to 1 for 24 ticks (6m)
+      - series: 'up{job="node",instance="rubi"}'
+        values: '0 0 0 0 0 0 0 0 0 0 0 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1'
+    alert_rule_test:
+      # At 8m (after 5m of recovery), short window (5m) has up=1 (burn rate = 0), alert must be CLEARED
+      - eval_time: 8m
+        alertname: HostTelemetryErrorBudgetBurnCritical
+        exp_alerts: []
+
+  # Test 4: Custom Agent Collector Success Degradation Alert
+  - interval: 15s
+    input_series:
+      # Collector failing constantly (value 0.90 < 0.999)
+      - series: 'linux_agent_collector_success{job="python-agent",instance="rubi",collector="cpu"}'
+        values: '0.90+0x40'
+    alert_rule_test:
+      - eval_time: 4m
+        alertname: CustomAgentCollectorExecutionDegraded
+        exp_alerts: [] # Pending (<5m)
+      - eval_time: 7m
+        alertname: CustomAgentCollectorExecutionDegraded
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              subsystem: sre_sli
+              sli_type: collector_success
+              component: python_agent
+              category: correctness
+              job: python-agent
+              instance: rubi
+              collector: cpu
+            exp_annotations:
+              summary: "Custom Agent collector success rate degraded (<99.9%) on rubi"
+              description: "Internal collector success rate is 0.9000 over 1 hour. Collectors are failing to parse /proc or /sys."
+              runbook_url: "docs/sre/sli-slo-framework.md"
+
+  # Test 5: Missing Metric / Absent Data Edge Case Handling
+  # When up metric is absent, SLI recording rules must cleanly yield no samples (empty vector) rather than NaN or failure
+  - interval: 15s
+    input_series:
+      - series: 'unrelated_host_metric{instance="rubi"}'
+        values: '1 1 1 1 1'
+    promql_expr_test:
+      - eval_time: 1m
+        expr: instance:node_exporter_availability:ratio5m{instance="rubi"}
+        exp_samples: []
+      - eval_time: 1m
+        expr: instance:node_exporter_burn_rate:5m{instance="rubi"}
+        exp_samples: []
