@@ -1,0 +1,70 @@
+# ==============================================================================
+# Linux System Monitoring Agent Configuration
+# ==============================================================================
+
+server:
+  host: "127.0.0.1"        # Security: Loopback only by default
+  port: 9101               # Prometheus metric exposition port
+  timeout: 30.0            # Request timeout in seconds
+
+collectors:
+  cpu: true                # CPU utilization, times, load average, pressure
+  memory: true             # RAM total, free, available, cached, pressure
+  swap: true               # Swap space, pages swapped in/out
+  filesystem: true         # Filesystem blocks, capacity, mountpoints
+  inode: true              # Inode totals and free counts
+  disk_io: true            # Disk stats, sector reads/writes, latency
+  network: true            # Network RX/TX bytes, packets, drops, errors
+  process: true            # Bounded process counts by state, top consumers
+  systemd: true            # Systemd service availability and active state
+
+filesystem_filter:
+  exclude_fstypes:
+    - autofs
+    - binfmt_misc
+    - bpf
+    - cgroup
+    - cgroup2
+    - configfs
+    - debugfs
+    - devpts
+    - devtmpfs
+    - fusectl
+    - hugetlbfs
+    - mqueue
+    - nsfs
+    - overlay
+    - proc
+    - pstore
+    - ramfs
+    - securityfs
+    - squashfs
+    - sysfs
+    - tmpfs
+    - tracefs
+  exclude_mountpoints:
+    - "^/(dev|proc|sys|run|snap)($|/)"
+
+disk_filter:
+  exclude_devices:
+    - "^loop[0-9]+"
+    - "^ram[0-9]+"
+
+process_filter:
+  max_processes: 500       # Safeguard against unbounded process iteration
+  top_n_cpu: 5             # Number of top CPU consuming processes to track
+  top_n_mem: 5             # Number of top memory consuming processes to track
+  sanitize_names: true     # Strip path/args to prevent credential leaks
+
+systemd:
+  monitored_units:
+    - "ssh.service"
+    - "systemd-journald.service"
+    - "cron.service"
+    - "prometheus.service"
+    - "prometheus-node-exporter.service"
+  timeout_seconds: 2.0     # Subprocess timeout to prevent blocking scrapes
+
+logging:
+  level: "INFO"            # DEBUG, INFO, WARNING, ERROR, CRITICAL
+  json_format: false       # Structured JSON logs for machine ingestion
