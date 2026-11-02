@@ -1,0 +1,107 @@
+# ==============================================================================
+# Grafana Loki Configuration
+# Project: Linux System Monitoring & Reliability Lab
+# Role: Agent 8 (Senior Observability Engineer - Centralized Logging)
+# Target Version: Loki v3.0.0
+# Storage Engine: Single-Binary TSDB v13 with Filesystem Chunk Store
+# ==============================================================================
+
+auth_enabled: false
+
+server:
+  http_listen_address: 0.0.0.0
+  http_listen_port: 3100
+  grpc_listen_port: 9096
+  log_level: info
+  grpc_server_max_recv_msg_size: 16777216  # 16MB
+  grpc_server_max_send_msg_size: 16777216
+
+common:
+  instance_addr: 127.0.0.1
+  path_prefix: /loki
+  storage:
+    filesystem:
+      chunks_directory: /loki/chunks
+      rules_directory: /loki/rules
+  replication_factor: 1
+  ring:
+    kvstore:
+      store: inmemory
+
+# TSDB Index & Storage Schema
+# Schema v13 is the modern default for Loki 3.x, replacing legacy boltdb-shipper
+schema_config:
+  configs:
+    - from: 2024-01-01
+      store: tsdb
+      object_store: filesystem
+      schema: v13
+      index:
+        prefix: index_
+        period: 24h
+
+# Ingestion & Query Limits (Cardinality Protection & Resource Boundaries)
+limits_config:
+  allow_structured_metadata: true        # Loki 3.0 structured metadata support
+  volume_enabled: true                   # Enables volume metric calculations
+  reject_old_samples: true               # Reject timestamps older than max_age
+  reject_old_samples_max_age: 168h       # 7 days
+  creation_grace_period: 10m             # Accept logs with slightly future timestamps (clock skew)
+  max_query_series: 500                  # Cardinality ceiling per query
+  max_query_lookback: 30d                # Maximum time range for query execution
+  max_query_length: 721h                 # Maximum query time window (~30 days)
+  max_entries_limit_per_query: 5000      # Bounds result sets for UI stability
+  ingestion_rate_mb: 8                   # Ingestion rate per stream
+  ingestion_burst_size_mb: 16            # Burst tolerance
+  per_stream_rate_limit: 3MB             # Anti-flood per stream
+  per_stream_rate_limit_burst: 5MB
+  retention_period: 168h                 # Global default retention (7 days / 168 hours)
+
+# Compactor: Enforces Chunk Compaction & Retention Deletion
+compactor:
+  working_directory: /loki/compactor
+  compactor_ring:
+    kvstore:
+      store: inmemory
+  retention_enabled: true                # Active deletion of expired log chunks
+  retention_delete_delay: 2h             # Buffer window before physical unlink
+  retention_delete_worker_count: 50      # Deletion concurrency
+  delete_request_store: filesystem
+
+# Ingester: Manages in-memory chunk lifecycle before flushing to filesystem
+ingester:
+  lifecycler:
+    ring:
+      kvstore:
+        store: inmemory
+      replication_factor: 1
+  chunk_idle_period: 30m                 # Flush chunk if no new logs arrive for 30m
+  chunk_block_size: 262144               # 256KB uncompressed chunk block size
+  chunk_retain_period: 1m                # Memory retention post-flush
+  max_chunk_age: 2h                      # Force flush chunks after 2 hours
+  chunk_target_size: 1572864             # Target 1.5MB chunk size for compression efficiency
+
+# Querier: LogQL Engine
+querier:
+  max_concurrent: 8
+
+# Query Frontend: Splits queries and caches metrics
+query_range:
+  results_cache:
+    cache:
+      embedded_cache:
+        enabled: true
+        max_size_mb: 100
+
+# Ruler: Evaluates LogQL Recording & Alerting Rules
+ruler:
+  storage:
+    type: local
+    local:
+      directory: /loki/rules
+  rule_path: /loki/rules-temp
+  alertmanager_url: http://alertmanager:9093
+  ring:
+    kvstore:
+      store: inmemory
+  enable_api: true
