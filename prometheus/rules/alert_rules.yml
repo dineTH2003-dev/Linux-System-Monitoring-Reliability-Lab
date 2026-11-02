@@ -1,0 +1,78 @@
+# Prometheus Supplementary Alerting Rules
+# Project: Linux System Monitoring & Reliability Lab
+# Role: Agent 5 (Senior Prometheus & Observability Engineer)
+# Specification: Non-overlapping supplementary alerts (OOM kills, RO mounts, load spikes, scrape latency, collector errors).
+# Note: Primary infrastructure alerts are canonically maintained in prometheus/alerts/infrastructure_alerts.yml.
+
+groups:
+  - name: storage_supplementary_alerts
+    interval: 15s
+    rules:
+      - alert: HostFilesystemReadonly
+        expr: node_filesystem_readonly{fstype=~"ext4|xfs"} == 1
+        for: 1m
+        labels:
+          severity: critical
+          subsystem: storage
+          category: availability
+        annotations:
+          summary: "Filesystem {{ $labels.mountpoint }} mounted read-only"
+          description: "Filesystem {{ $labels.mountpoint }} has remounted read-only due to kernel I/O errors or metadata inconsistency."
+          runbook_url: "docs/troubleshooting/disk-readonly.md"
+
+  - name: compute_supplementary_alerts
+    interval: 15s
+    rules:
+      - alert: HostHighLoadAverage
+        expr: node_load5 / count without (cpu, mode) (node_cpu_seconds_total{mode="idle"}) > 1.5
+        for: 10m
+        labels:
+          severity: warning
+          subsystem: cpu
+          category: load
+        annotations:
+          summary: "System load average exceeds core capacity on {{ $labels.instance }}"
+          description: "5-minute load average normalized per core is {{ $value | printf \"%.2f\" }} (>1.5x total logical core capacity)."
+          runbook_url: "docs/troubleshooting/cpu-load.md"
+
+  - name: memory_supplementary_alerts
+    interval: 15s
+    rules:
+      - alert: HostOomKillDetected
+        expr: increase(node_vmstat_oom_kill[5m]) > 0
+        for: 0m
+        labels:
+          severity: critical
+          subsystem: memory
+          category: incident
+        annotations:
+          summary: "Kernel Out of Memory (OOM) killer invoked on {{ $labels.instance }}"
+          description: "Kernel OOM killer terminated one or more tasks within the last 5 minutes. Check journalctl -k."
+          runbook_url: "docs/troubleshooting/oom-incident.md"
+
+  - name: observability_health_alerts
+    interval: 15s
+    rules:
+      - alert: TargetScrapeSlow
+        expr: scrape_duration_seconds > 5
+        for: 5m
+        labels:
+          severity: warning
+          subsystem: observability
+          category: performance
+        annotations:
+          summary: "Slow metric scrape on target {{ $labels.job }} ({{ $labels.instance }})"
+          description: "Scrape duration for {{ $labels.instance }} is {{ $value | printf \"%.2f\" }}s (>5s), approaching scrape timeout."
+          runbook_url: "docs/troubleshooting/slow-scrape.md"
+
+      - alert: CustomAgentCollectorErrors
+        expr: linux_agent_collector_success == 0
+        for: 3m
+        labels:
+          severity: warning
+          subsystem: custom_agent
+          category: exporter_health
+        annotations:
+          summary: "Custom Python agent collector error: {{ $labels.collector }}"
+          description: "Collector '{{ $labels.collector }}' in Python monitoring agent failed during collection."
+          runbook_url: "docs/troubleshooting/custom-agent.md"
