@@ -1,0 +1,196 @@
+# Prometheus SRE Recording & Multi-Window Burn-Rate Alert Rules
+# Project: Linux System Monitoring & Reliability Lab
+# Specification: Non-conflicting SRE companion rule group for SLI/SLO tracking and error budget governance
+# Author: Senior Site Reliability Engineer (Agent 9)
+
+groups:
+  - name: sre_sli_recording_rules
+    interval: 15s
+    rules:
+      # Host Node Exporter Availability SLI (Rolling windows: 5m, 1h, 30d)
+      - record: instance:node_exporter_availability:ratio5m
+        expr: avg_over_time(up{job="node"}[5m])
+        labels:
+          subsystem: sre_sli
+          sli_type: availability
+          component: node_exporter
+
+      - record: instance:node_exporter_availability:ratio1h
+        expr: avg_over_time(up{job="node"}[1h])
+        labels:
+          subsystem: sre_sli
+          sli_type: availability
+          component: node_exporter
+
+      - record: instance:node_exporter_availability:ratio30d
+        expr: avg_over_time(up{job="node"}[30d])
+        labels:
+          subsystem: sre_sli
+          sli_type: availability
+          component: node_exporter
+
+      # Custom Python Agent Availability SLI (Rolling windows: 5m, 1h, 30d)
+      - record: instance:custom_agent_availability:ratio5m
+        expr: avg_over_time(up{job="python-agent"}[5m])
+        labels:
+          subsystem: sre_sli
+          sli_type: availability
+          component: python_agent
+
+      - record: instance:custom_agent_availability:ratio1h
+        expr: avg_over_time(up{job="python-agent"}[1h])
+        labels:
+          subsystem: sre_sli
+          sli_type: availability
+          component: python_agent
+
+      - record: instance:custom_agent_availability:ratio30d
+        expr: avg_over_time(up{job="python-agent"}[30d])
+        labels:
+          subsystem: sre_sli
+          sli_type: availability
+          component: python_agent
+
+      # Custom Agent Internal Collector Execution SLI (Target: 99.9%)
+      - record: instance:custom_agent_collector_success:ratio1h
+        expr: avg_over_time(linux_agent_collector_success[1h])
+        labels:
+          subsystem: sre_sli
+          sli_type: collector_success
+          component: python_agent
+
+      # Scrape Latency SLI (Ratio of scrapes completing in <= 1.0s)
+      - record: instance:node_scrape_latency_success:ratio1h
+        expr: sum_over_time((scrape_duration_seconds{job="node"} <= bool 1.0)[1h:15s]) / count_over_time(scrape_duration_seconds{job="node"}[1h])
+        labels:
+          subsystem: sre_sli
+          sli_type: latency
+          component: node_exporter
+
+  - name: sre_error_budget_rules
+    interval: 15s
+    rules:
+      # Node Exporter Error Budget Remaining % (SLO: 99.5%, Budget: 0.005)
+      - record: instance:node_exporter_error_budget_remaining:percent30d
+        expr: clamp_min(100 - ((1 - avg_over_time(up{job="node"}[30d])) / 0.005 * 100), 0)
+        labels:
+          subsystem: sre_budget
+          component: node_exporter
+
+      # Node Exporter Error Budget Consumed %
+      - record: instance:node_exporter_error_budget_consumed:percent30d
+        expr: clamp_min((1 - avg_over_time(up{job="node"}[30d])) / 0.005 * 100, 0)
+        labels:
+          subsystem: sre_budget
+          component: node_exporter
+
+      # Multi-Window Burn Rates for Node Exporter (Target: 99.5% -> Budget: 0.005)
+      - record: instance:node_exporter_burn_rate:5m
+        expr: (1 - avg_over_time(up{job="node"}[5m])) / 0.005
+        labels:
+          subsystem: sre_burn_rate
+          component: node_exporter
+
+      - record: instance:node_exporter_burn_rate:30m
+        expr: (1 - avg_over_time(up{job="node"}[30m])) / 0.005
+        labels:
+          subsystem: sre_burn_rate
+          component: node_exporter
+
+      - record: instance:node_exporter_burn_rate:1h
+        expr: (1 - avg_over_time(up{job="node"}[1h])) / 0.005
+        labels:
+          subsystem: sre_burn_rate
+          component: node_exporter
+
+      - record: instance:node_exporter_burn_rate:6h
+        expr: (1 - avg_over_time(up{job="node"}[6h])) / 0.005
+        labels:
+          subsystem: sre_burn_rate
+          component: node_exporter
+
+      # Multi-Window Burn Rates for Custom Python Agent (Target: 99.0% -> Budget: 0.010)
+      - record: instance:custom_agent_burn_rate:5m
+        expr: (1 - avg_over_time(up{job="python-agent"}[5m])) / 0.010
+        labels:
+          subsystem: sre_burn_rate
+          component: python_agent
+
+      - record: instance:custom_agent_burn_rate:1h
+        expr: (1 - avg_over_time(up{job="python-agent"}[1h])) / 0.010
+        labels:
+          subsystem: sre_burn_rate
+          component: python_agent
+
+  - name: sre_burn_rate_alerts
+    interval: 15s
+    rules:
+      # Critical Rapid Burn Rate: 14.4x over 1h AND 5m (Consumes 2% budget in 1 hour)
+      - alert: HostTelemetryErrorBudgetBurnCritical
+        expr: (instance:node_exporter_burn_rate:1h > 14.4) and (instance:node_exporter_burn_rate:5m > 14.4)
+        for: 2m
+        labels:
+          severity: critical
+          subsystem: sre_burn_rate
+          component: node_exporter
+          category: availability
+        annotations:
+          summary: "Critical Host Telemetry Error Budget Burn Rate (14.4x) on {{ $labels.instance }}"
+          description: "Node Exporter error budget is burning at 14.4x over both 1h and 5m windows. 2% of monthly budget consumed in 1 hour. Entire budget exhausted in 50 hours."
+          runbook_url: "docs/sre/error-budget-policy.md"
+
+      # High Medium Burn Rate: 6.0x over 6h AND 30m (Consumes 5% budget in 6 hours)
+      - alert: HostTelemetryErrorBudgetBurnHigh
+        expr: (instance:node_exporter_burn_rate:6h > 6.0) and (instance:node_exporter_burn_rate:30m > 6.0)
+        for: 5m
+        labels:
+          severity: critical
+          subsystem: sre_burn_rate
+          component: node_exporter
+          category: availability
+        annotations:
+          summary: "High Host Telemetry Error Budget Burn Rate (6.0x) on {{ $labels.instance }}"
+          description: "Node Exporter error budget is burning at 6.0x over both 6h and 30m windows. 5% of monthly budget consumed in 6 hours. Entire budget exhausted in 5 days."
+          runbook_url: "docs/sre/error-budget-policy.md"
+
+      # Custom Python Agent Rapid Burn Rate: 14.4x over 1h AND 5m
+      - alert: CustomAgentTelemetryErrorBudgetBurnCritical
+        expr: (instance:custom_agent_burn_rate:1h > 14.4) and (instance:custom_agent_burn_rate:5m > 14.4)
+        for: 2m
+        labels:
+          severity: critical
+          subsystem: sre_burn_rate
+          component: python_agent
+          category: availability
+        annotations:
+          summary: "Critical Python Agent Error Budget Burn Rate (14.4x) on {{ $labels.instance }}"
+          description: "Custom monitoring agent is burning error budget at 14.4x over 1h and 5m. Risk of complete custom telemetry blackout."
+          runbook_url: "docs/sre/error-budget-policy.md"
+
+      # Internal Collector Execution Degradation Alert
+      - alert: CustomAgentCollectorExecutionDegraded
+        expr: instance:custom_agent_collector_success:ratio1h < 0.999
+        for: 5m
+        labels:
+          severity: warning
+          subsystem: sre_sli
+          component: python_agent
+          category: correctness
+        annotations:
+          summary: "Custom Agent collector success rate degraded (<99.9%) on {{ $labels.instance }}"
+          description: "Internal collector success rate is {{ $value | printf \"%.4f\" }} over 1 hour. Collectors are failing to parse /proc or /sys."
+          runbook_url: "docs/sre/sli-slo-framework.md"
+
+      # Monitoring Pipeline Rule Iteration Miss Alert
+      - alert: MonitoringPipelineRuleIterationsMissed
+        expr: increase(prometheus_rule_group_iterations_missed_total[5m]) > 0
+        for: 3m
+        labels:
+          severity: warning
+          subsystem: sre_pipeline
+          component: prometheus_rule_engine
+          category: pipeline_integrity
+        annotations:
+          summary: "Prometheus rule group iterations missed on {{ $labels.rule_group }}"
+          description: "Prometheus rule engine missed {{ $value }} scheduled evaluations in rule group {{ $labels.rule_group }}. Rule execution delay detected."
+          runbook_url: "docs/sre/sli-slo-framework.md"
