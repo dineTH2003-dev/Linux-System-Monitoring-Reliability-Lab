@@ -1,0 +1,99 @@
+# Promtool Unit Tests for Prometheus Rules
+# Project: Linux System Monitoring & Reliability Lab
+# Role: Agent 5 (Senior Prometheus & Observability Engineer)
+# Specification: Unit tests for recording rules and canonical infrastructure alerts
+
+rule_files:
+  - ../rules/recording_rules.yml
+  - ../rules/alert_rules.yml
+  - ../alerts/infrastructure_alerts.yml
+
+evaluation_interval: 15s
+
+tests:
+  # Test 1: CPU Recording Rules & CPU High Warning Alert
+  - interval: 15s
+    input_series:
+      # Simulate 12 logical CPUs running with 95% active utilization (5% idle)
+      - series: 'node_cpu_seconds_total{instance="rubi",cpu="0",mode="idle"}'
+        values: '0+0.75x40' # 0.75 ticks per 15s = 5% of 15s
+      - series: 'node_cpu_seconds_total{instance="rubi",cpu="0",mode="user"}'
+        values: '0+14.25x40' # 14.25 ticks per 15s = 95% of 15s
+      - series: 'node_pressure_cpu_waiting_seconds_total{instance="rubi"}'
+        values: '0+4.5x40' # 4.5s per 15s = 30% pressure
+    alert_rule_test:
+      - eval_time: 4m
+        alertname: HostHighCpuUtilizationWarning
+        exp_alerts: [] # Pending (<5m)
+      - eval_time: 6m
+        alertname: HostHighCpuUtilizationWarning
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              subsystem: cpu
+              category: saturation
+              impact: processing_delay
+              instance: rubi
+            exp_annotations:
+              summary: "Elevated CPU utilization on rubi (95.0%)"
+              description: "Active CPU utilization averaged 95.0% across all cores over a 5-minute moving window. Approaching saturation threshold."
+              diagnostic_context: "Identify high-consuming threads and run-queue contention."
+              diagnostic_command: "top -b -n 1 -o %CPU | head -n 20"
+              runbook_url: "docs/troubleshooting/cpu-saturation.md"
+
+  # Test 2: Filesystem Capacity Warning Alert (for: 10m)
+  - interval: 15s
+    input_series:
+      # 100 GB total, immediately starts at 12 GB free (12% available)
+      - series: 'node_filesystem_size_bytes{instance="rubi",device="/dev/nvme0n1p2",mountpoint="/",fstype="ext4"}'
+        values: '100000000000+0x60'
+      - series: 'node_filesystem_avail_bytes{instance="rubi",device="/dev/nvme0n1p2",mountpoint="/",fstype="ext4"}'
+        values: '12000000000+0x60' # 12% available (< 15%)
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: HostFilesystemSpaceWarning
+        exp_alerts: [] # Still pending at 8m (< 10m)
+      - eval_time: 11m
+        alertname: HostFilesystemSpaceWarning
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              subsystem: storage
+              category: capacity
+              impact: capacity_depletion
+              instance: rubi
+              device: /dev/nvme0n1p2
+              mountpoint: /
+              fstype: ext4
+            exp_annotations:
+              summary: "Low filesystem space on / (12%)"
+              description: "Filesystem / on /dev/nvme0n1p2 has 12% available space remaining for unprivileged processes."
+              diagnostic_context: "Excludes read-only snaps and virtual filesystems. Threshold <15% for 10m."
+              diagnostic_command: "df -hT /"
+              runbook_url: "docs/troubleshooting/disk-capacity.md"
+
+  # Test 3: Node Exporter Unavailable Alert (for: 2m)
+  - interval: 15s
+    input_series:
+      - series: 'up{job="node",instance="rubi"}'
+        values: '1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0'
+    alert_rule_test:
+      - eval_time: 1m
+        alertname: NodeExporterUnavailable
+        exp_alerts: []
+      - eval_time: 3m
+        alertname: NodeExporterUnavailable
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              subsystem: observability
+              category: exporter_health
+              impact: kernel_telemetry_loss
+              job: node
+              instance: rubi
+            exp_annotations:
+              summary: "Node Exporter scrape failure on rubi"
+              description: "Prometheus has failed to scrape Node Exporter at rubi (:9100) for >2 minutes. Host hardware and kernel metrics are unobserved."
+              diagnostic_context: "Daemon crash, port blockage, or OOM kill of node_exporter binary."
+              diagnostic_command: "systemctl status prometheus-node-exporter.service"
+              runbook_url: "docs/troubleshooting/target-down.md"
