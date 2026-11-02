@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "linux-monitoring-agent"
+version = "1.0.0"
+description = "Production-grade modular Python Linux system monitoring agent for Prometheus"
+authors = [
+    { name = "Site Reliability Engineering Team", email = "sre@example.com" }
+]
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "pyyaml>=6.0.2",
+    "psutil>=6.1.0",
+    "prometheus-client>=0.21.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.3",
+    "pytest-cov>=5.0.0",
+    "flake8>=7.1.1",
+]
+
+[project.scripts]
+linux-agent = "agent.main:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["agent*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests/python"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --strict-markers"
+pythonpath = ["."]
+
+[tool.coverage.run]
+source = ["agent"]
+omit = [
+    "tests/*",
+]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
