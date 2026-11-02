@@ -85,8 +85,8 @@ Audited using `ip addr`, `ip route`, `resolvectl status`, and `ss -tuln`.
 
 ### 5.1 Interfaces & IP Addressing
 - **`lo` (Loopback)**: `127.0.0.1/8`, `::1/128`
-- **`wlo1` (Wireless Network)**: State `UP`, IP: `10.10.3.81/19`, Default Gateway: `10.10.31.254`
-- **DNS Resolution**: `systemd-resolved` local stub at `127.0.0.53:53` / `127.0.0.54:53`. Upstream DNS: `192.248.8.97`, `10.15.250.111` (Domain: `wifi.uom.lk`).
+- **`wlo1` (Wireless Network)**: State `UP`, IP: `10.10.x.x/19` (DHCP), Default Gateway: `10.10.x.254`
+- **DNS Resolution**: `systemd-resolved` local stub at `127.0.0.53:53` / `127.0.0.54:53`. Upstream DNS configured via DHCP (Domain: internal).
 
 ### 5.2 Listening Ports Audit & Conflict Analysis
 A crucial audit finding is that **standard monitoring ports are already occupied by host-level native systemd services**:
@@ -129,7 +129,7 @@ Audited via `systemctl is-system-running`, `systemctl list-units`.
 |---|---|---|---|
 | **Git** | ✅ Installed | `2.43.0` (`/usr/bin/git`) | Monorepo version control |
 | **Python 3** | ✅ Installed | `3.12.3` (`/usr/bin/python3`) | Custom agent and log parser |
-| **pip / pip3** | ✅ Installed | `26.1.1` (`/home/dineth/.local/bin/pip`) | Python package management |
+| **pip / pip3** | ✅ Installed | `26.1.1` (`~/.local/bin/pip`) | Python package management |
 | **venv** | ✅ Available | Python standard library `venv` | Isolated agent virtual environment |
 | **psutil** | ✅ Available | Python module in user site-packages | Kernel & process sampling library |
 | **pyyaml** | ✅ Available | Python module | Agent configuration parser |
