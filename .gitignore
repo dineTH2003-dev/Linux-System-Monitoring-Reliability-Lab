@@ -18,8 +18,9 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
-lib64/
+/lib/
+/lib64/
+!scripts/lib/
 parts/
 sdist/
 var/
@@ -40,15 +41,27 @@ coverage.xml
 
 # Environment Variables & Secrets
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
 *.pem
 *.key
 *.cert
 *.crt
+*.p12
+*.pfx
+*.pkcs12
+*.kdbx
+*.jks
+*.keystore
 id_rsa
 id_rsa.pub
+id_ed25519
+id_ed25519.pub
 secrets/
+*.tfvars
+*.kubeconfig
+backups/
+*.tar.gz
 
 # Application Logs & Diagnostics
 *.log
