@@ -1,9 +1,10 @@
 # Linux System Monitoring & Reliability Lab
 ### Production-Inspired Linux Observability and SRE Engineering Platform
 
-[![Status: Phase 0](https://img.shields.io/badge/Status-Phase%200%3A%20Environment%20Assessment-blue.svg)](https://github.com/dineTH2003-dev/Linux-System-Monitoring-Reliability-Lab)
+[![Status: Validated SRE Lab](https://img.shields.io/badge/Status-Validated%20SRE%20Lab%20(Phases%200--9%20Complete)-brightgreen.svg)](https://github.com/dineTH2003-dev/Linux-System-Monitoring-Reliability-Lab)
 [![Target OS](https://img.shields.io/badge/Target%20OS-Ubuntu%2024.04%20LTS-E95420.svg?logo=ubuntu)](https://ubuntu.com/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Tests: Passing](https://img.shields.io/badge/Tests-100%25%20Passing-success.svg)](#8-testing--validation-suite)
 
 ---
 
@@ -21,6 +22,7 @@ Rather than treating monitoring as a passive dashboard installation exercise, th
 - Defining measurable Service Level Indicators (SLIs), Service Level Objectives (SLOs), and Error Budgets.
 - Conducting controlled failure injection experiments to measure Mean Time to Detect (MTTD) and Mean Time to Restore (MTTR).
 - Automating service remediation with guardrails against cascading failures.
+- Guaranteeing 100% zero-interference coexistence with pre-existing host services.
 
 ---
 
@@ -32,8 +34,9 @@ Modern Linux environments require active observability and systematic reliabilit
 3. How to construct alert thresholds that accurately reflect degradation without generating alert fatigue.
 4. How to correlate metric anomalies with system log events during an incident.
 5. How to quantitatively measure availability against an SLO error budget.
+6. How to deploy containerized observability stacks alongside existing native monitoring systems without socket port collisions.
 
-This project solves this by constructing the monitoring pipeline from the ground up on physical/virtual host hardware.
+This project solves this by constructing the monitoring pipeline from the ground up on physical/virtual host hardware with strict dual-stack port isolation and zero-interference guarantees.
 
 ---
 
@@ -42,35 +45,37 @@ This project solves this by constructing the monitoring pipeline from the ground
 - **Host Telemetry**: Continuous sampling of CPU (per-core, user/sys/iowait), memory saturation, swap, disk filesystem/inode usage, disk I/O latency, network throughput/errors, and process states.
 - **Custom Agent**: Independent Python 3 monitoring agent leveraging `psutil` exposing Prometheus-compatible metrics on `:9101/metrics`.
 - **Bash Automation Suite**: 7 standalone POSIX-compliant Bash scripts (`set -Eeuo pipefail`) for targeted CLI health checks and diagnostics.
-- **Metrics Pipeline**: Prometheus time-series database with tailored scrape configurations and retention policies.
-- **Custom Dashboards**: 5 purpose-built Grafana operational dashboards crafted with native PromQL queries.
-- **Alert Engineering**: Alertmanager pipeline supporting alert grouping, inhibition, deduplication, and external notifications.
-- **Log Correlation**: `journald` and Loki-based log inspection correlated against Prometheus anomaly timestamps.
-- **SRE Reliability Framework**: Defined SLIs, 99.9% SLO targets, error budget burn-rate tracking, and MTTD/MTTR telemetry.
+- **Metrics Pipeline**: Prometheus time-series database with tailored scrape configurations and retention policies (`:9091`).
+- **Custom Dashboards**: 5 purpose-built Grafana operational dashboards crafted with native PromQL queries (`:3001`).
+- **Alert Engineering**: Alertmanager pipeline supporting alert grouping, inhibition, deduplication, and webhook dispatch (`:9094`).
+- **Mock Alert Receiver**: Local lightweight webhook sink for automated triage and alert verification (`:5002`).
+- **Log Correlation**: `journald` and Loki-based log inspection correlated against Prometheus anomaly timestamps (`:3100`).
+- **Synthetic Probing**: Multi-target Blackbox Exporter (`:9115`) probing HTTP and public DNS (`example.com`).
+- **SRE Reliability Framework**: Defined SLIs, 99.9% SLO targets, multi-window multi-burn-rate tracking, and MTTD/MTTR telemetry.
 - **Failure Engineering**: Controlled failure injection scenarios (`stress-ng`, bounded I/O, process termination) with automated remediation controllers.
 
 ---
 
-## 4. Technology Stack
+## 4. Technology Stack & Port Allocation Matrix
 
-| Layer | Component | Description |
-|---|---|---|
-| **Host OS** | Ubuntu 24.04 LTS (Noble Numbat) | Monitored Linux host environment |
-| **Automation** | Bash (`set -Eeuo pipefail`) | System check automation and remediation scripts |
-| **Custom Agent** | Python 3.12 (`psutil`, `pyyaml`) | Host telemetry collector and HTTP metrics exporter |
-| **Host Exporter** | Prometheus Node Exporter | Native hardware and kernel metrics exporter (`:9100`) |
-| **Metrics Engine** | Prometheus Server | Time-series database, PromQL engine, scrape scheduler (`:9090`) |
-| **Alert Routing** | Prometheus Alertmanager | Alert grouping, deduplication, routing, silencing (`:9093`) |
-| **Visualization**| Grafana | Operational observability dashboards (`:3000`) |
-| **Probing** | Blackbox Exporter | HTTP/TCP endpoint availability probing (`:9115`) |
-| **Service Manager**| systemd | Host service lifecycle management and auto-restart policies |
-| **Logging** | systemd-journald / Loki | Structured host and container log aggregation |
-| **Container Runtime** | Docker & Docker Compose | Isolated deployment of monitoring platform components |
-| **Testing** | `pytest`, `shellcheck`, `stress-ng` | Static analysis, agent unit testing, and load simulation |
+The platform implements strict dual-stack isolation, preventing socket collisions with pre-existing host services:
+
+| Component | Native Host Binding | Lab Project Binding | Container Internal | Description |
+|---|---|---|---|---|
+| **Prometheus** | `*:9090` | `127.0.0.1:9091` | `9090` | Time-series database & PromQL engine |
+| **Grafana** | `*:3000` | `127.0.0.1:3001` | `3000` | Operational dashboards & SLI monitoring |
+| **Node Exporter** | `*:9100` | *(Host Scraped)* | — | Bare-metal kernel & hardware telemetry |
+| **Custom Agent** | — | `127.0.0.1:9101` | — | Native Python 3 host monitoring agent |
+| **Alertmanager** | — | `127.0.0.1:9094` | `9093` | Alert routing, grouping, and deduplication |
+| **Mock Alert Sink** | — | `127.0.0.1:5002` | — | Local alert webhook test sink |
+| **Grafana Loki** | — | `127.0.0.1:3100` | `3100` | High-efficiency log aggregation engine |
+| **Blackbox Exporter** | — | `127.0.0.1:9115` | `9115` | Synthetic HTTP/DNS availability prober |
+| **Grafana Alloy** | `127.0.0.1:12346` | `127.0.0.1:12345` | `12345` | Next-gen telemetry collector & pipeline |
+| **PostgreSQL** | `127.0.0.1:5432` | `0.0.0.0:5433` (Foreign) | `5432` | Isolated foreign application database |
 
 ---
 
-## 5. High-Level Architecture
+## 5. System Architecture
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
@@ -92,20 +97,20 @@ This project solves this by constructing the monitoring pipeline from the ground
 │     │                 CONTAINERIZED OBSERVABILITY STACK          │     │
 │     │                                                            │     │
 │     │  ┌───────────────────────┐      ┌───────────────────────┐  │     │
-│     │  │   Prometheus (:9090)  │─────▶│ Alertmanager (:9093)  │  │     │
+│     │  │   Prometheus (:9091)  │─────▶│ Alertmanager (:9094)  │  │     │
 │     │  │   TSDB & PromQL       │      │ Alert Routing         │  │     │
 │     │  └───────────┬───────────┘      └───────────┬───────────┘  │     │
 │     │              │                              │              │     │
 │     │              ▼                              ▼              │     │
 │     │  ┌───────────────────────┐      ┌───────────────────────┐  │     │
-│     │  │    Grafana (:3000)    │      │ External Notification │  │     │
-│     │  │    Dashboards & SLIs  │      │ (Telegram / Webhook)  │  │     │
+│     │  │    Grafana (:3001)    │      │ Mock Alert Sink(:5002)│  │     │
+│     │  │    Dashboards & SLIs  │      │ Automated Triage Sink │  │     │
 │     │  └───────────────────────┘      └───────────────────────┘  │     │
-│     │              ▲                                             │     │
-│     │              │ Query                                       │     │
-│     │  ┌───────────┴───────────┐      ┌───────────────────────┐  │     │
+│     │              ▲                              ▲              │     │
+│     │              │ Query                        │ Alerts       │     │
+│     │  ┌───────────┴───────────┐      ┌───────────┴───────────┐  │     │
 │     │  │   Grafana Loki (:3100)│◀─────│ Blackbox Exp (:9115)  │  │     │
-│     │  │   Log Aggregation     │      │ Endpoint Probing      │  │     │
+│     │  │   Log Aggregation     │      │ Synthetic DNS / HTTP  │  │     │
 │     │  └───────────────────────┘      └───────────────────────┘  │     │
 │     └────────────────────────────────────────────────────────────┘     │
 └────────────────────────────────────────────────────────────────────────┘
@@ -116,23 +121,73 @@ This project solves this by constructing the monitoring pipeline from the ground
 ## 6. Development Roadmap
 
 ```
-Phase 0: Environment Assessment & Project Initialization  ◀ [CURRENT STATUS]
-Phase 1: Linux System Intelligence & Kernel Introspection
-Phase 2: Custom Monitoring Automation (Bash & Python Agent)
-Phase 3: Prometheus Infrastructure & Scrape Architecture
-Phase 4: Grafana Observability Dashboards
-Phase 5: Alerting & Incident Detection Pipeline
-Phase 6: Linux Log Monitoring & Correlation
-Phase 7: SRE Reliability Engineering (SLI / SLO / Error Budgets)
-Phase 8: Failure Simulation & Automated Recovery Engineering
-Phase 9: Production-Style Deployment, Hardening & Final Documentation
+[✓] Phase 0: Environment Assessment & Project Initialization
+[✓] Phase 1: Linux System Intelligence & Kernel Introspection
+[✓] Phase 2: Custom Monitoring Automation (Bash Suite & Python Agent)
+[✓] Phase 3: Prometheus Infrastructure & Scrape Architecture
+[✓] Phase 4: Grafana Observability Dashboards (5 Provisioned Dashboards)
+[✓] Phase 5: Alerting & Incident Detection Pipeline (Alertmanager & Rules)
+[✓] Phase 6: Linux Log Monitoring & Correlation (Journald & Loki)
+[✓] Phase 7: SRE Reliability Engineering (SLI / SLO / Error Budgets)
+[✓] Phase 8: Failure Simulation & Automated Recovery Engineering
+[✓] Phase 9: Production-Style Deployment, Hardening & Final Documentation
 ```
 
 ---
 
-## 7. Project Status
+## 7. Security & Hardening Profile
 
-- **Current Milestone**: `Phase 0 — Environment Assessment & Project Initialization`
-- **Environment State**: Partially Ready (Host baseline cataloged, pending tool prerequisites and service port alignment).
-- **Branch**: `main`
-- **Next Milestone**: Phase 1 (Linux System Intelligence).
+- **Container Hardening**: 42/42 project-defined container hardening checks passed (`security/container_audit.sh`), enforcing non-root users (`uid:gid`), dropped capabilities (`cap_drop: [ALL]`), `no-new-privileges: true`, and `read_only: true` filesystems.
+- **Loopback Enforcement**: All container published ports are strictly bound to `127.0.0.1`, completely preventing exposure on external network interfaces.
+- **Secret Scanning**: Zero hardcoded secrets, API tokens, or cleartext credentials detected across working tree and commit history via static regex scanning (`security/secret_scanner.sh`).
+
+---
+
+## 8. Testing & Validation Suite
+
+The repository includes a comprehensive, multi-layer automated validation suite:
+
+```bash
+# 1. Python Unit & Contract Tests (Agent, SRE Math, Integration Contracts, Mock Sink)
+./.venv/bin/pytest tests/python/ tests/reliability/ -v
+
+# 2. Bash Monitoring & Safety Tests (POSIX compliance, CLI diagnostics, Procfs mock)
+bash scripts/tests/test_runner.sh
+
+# 3. Prometheus Rule Validation & Alert Unit Tests
+promtool check config prometheus/prometheus.yml
+promtool check rules prometheus/rules/*.yml prometheus/alerts/*.yml
+promtool test rules prometheus/tests/*.yml
+
+# 4. Security & Container Compliance Audits
+bash security/secret_scanner.sh
+bash security/container_audit.sh
+
+# 5. Docker Compose Configuration Integrity
+docker compose config --quiet
+```
+
+---
+
+## 9. Operational Boundaries & Testing Scope
+
+To maintain rigorous engineering honesty, this repository explicitly documents its operational boundaries and assumptions:
+- **Workstation Lab Scope**: This platform is designed, tested, and validated as a single-workstation Linux SRE engineering lab (Ubuntu 24.04 LTS with Docker Desktop and native systemd). It is not an enterprise-certified multi-cluster cloud SaaS.
+- **Loopback Ports vs. Foreign Services**: All published ports for the monitoring lab (`:9091`, `:3001`, `:9094`, `:3100`, `:9115`, `:12345`, `:9101`, `:5002`) are bound strictly to `127.0.0.1`. Unrelated foreign services listening on `0.0.0.0` (such as `taskmanager-postgres` on `:5433` and `resiliencelab-*` containers) are third-party stacks outside the scope and configuration boundary of this repository. No host firewall settings were modified.
+- **Offline Node Exporter Behavior**: The native host `prometheus-node-exporter` service is optional. When stopped during host maintenance, the lab's primary system telemetry pipeline continues operating via the native Python agent on `:9101`. Prometheus accurately detects the missing host exporter (`up{job="node"} == 0`), evaluating multi-window error budget burn rate at exactly `200.0x` and demonstrating alert rule correctness under actual failure conditions.
+- **Disaster Recovery Validation Status**: Automated backup creation (`deployment/backup.sh`), SHA-256 cryptographic verification, Schema 2.0.0 JSON metadata manifest validation, and `--dry-run` restore preflight safety checks (`deployment/restore.sh --dry-run`) have been empirically verified. Full live/isolated volume restore execution has not yet been demonstrated in this live environment to protect active persistent TSDB data.
+- **Docker Desktop Staging Requirements**: When operating under Docker Desktop for Linux, the container engine runs in a virtual machine where `/tmp` is not shared. All backup staging operations must be directed to `$HOME`-based paths (`~/.local/share/lab-monitoring/tmp/`).
+- **Port Allocation**: Host port allocations (`127.0.0.1:9094` for Alertmanager, `127.0.0.1:5002` for Mock Alert Receiver) ensure zero collisions with coexisting host services or foreign Docker stacks.
+
+---
+
+## 10. Operational Runbooks & Documentation Index
+
+- [Host Service Coexistence](docs/deployment/host-service-coexistence.md)
+- [Backup & Disaster Recovery Runbook](docs/deployment/runbooks/backup-recovery-runbook.md)
+- [SLI / SLO Framework](docs/sre/sli-slo-framework.md)
+- [Error Budget Policy](docs/sre/error-budget-policy.md)
+- [Container Security Profile](docs/security/container-security-profile.md)
+- [Least Privilege Guide](docs/security/linux-least-privilege-guide.md)
+- [Automated Remediation Guardrails](docs/reliability/automated-remediation.md)
+- [Incident Lifecycle & Runbooks](docs/reliability/incident-lifecycle.md)
