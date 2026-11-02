@@ -1,0 +1,10 @@
+nr_free_pages 1000000
+nr_zone_inactive_anon 1000000
+nr_zone_active_anon 1000000
+pgpgin 5000000
+pgpgout 6000000
+pswpin 10000
+pswpout 25000
+pgalloc_normal 10000000
+pgfault 20000000
+pgmajfault 50000
