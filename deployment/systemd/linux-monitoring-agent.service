@@ -1,0 +1,46 @@
+[Unit]
+Description=Linux System Monitoring Agent (Prometheus Exporter)
+Documentation=https://github.com/dineth/Linux-System-Monitoring-Reliability-Lab
+After=network.target local-fs.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=monitoring
+Group=monitoring
+WorkingDirectory=/opt/linux-monitoring-agent
+ExecStart=/opt/linux-monitoring-agent/.venv/bin/python3 -m agent.main -c agent/config.yaml --host 127.0.0.1 --port 9101
+Restart=on-failure
+RestartSec=5s
+KillMode=mixed
+TimeoutStopSec=10s
+
+# Linux Kernel Sandboxing & Privilege Separation Directives
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=read-only
+PrivateTmp=yes
+ProtectKernelTunables=yes
+ProtectControlGroups=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectClock=yes
+ProtectHostname=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+RestrictNamespaces=yes
+CapabilityBoundingSet=
+AmbientCapabilities=
+
+# Network Restrictions
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+
+# Logging Output
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=linux-monitoring-agent
+
+[Install]
+WantedBy=multi-user.target default.target
