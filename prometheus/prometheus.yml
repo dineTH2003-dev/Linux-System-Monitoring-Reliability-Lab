@@ -1,0 +1,159 @@
+# Prometheus Configuration
+# Project: Linux System Monitoring & Reliability Lab
+# Role: Agent 5 (Senior Prometheus & Observability Engineer)
+# Specification: Prometheus server configuration, scrape jobs, intervals, timeouts, and rules
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  scrape_timeout: 10s
+  external_labels:
+    environment: 'lab'
+    monitor: 'linux-system-monitoring-lab'
+    host: 'rubi'
+
+rule_files:
+  - 'rules/recording_rules.yml'
+  - 'rules/sre_rules.yml'
+  - 'rules/alert_rules.yml'
+  - 'alerts/*.yml'
+
+alerting:
+  alertmanagers:
+    - timeout: 10s
+      static_configs:
+        - targets:
+            - 'alertmanager:9093'
+
+
+scrape_configs:
+  # 1. Native Node Exporter running on physical Ubuntu host
+  # Reached via Docker Desktop host gateway 'host.docker.internal:9100'
+  - job_name: 'node'
+    scrape_interval: 15s
+    scrape_timeout: 10s
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['host.docker.internal:9100']
+        labels:
+          instance: 'rubi'
+          collector_type: 'node_exporter'
+          role: 'host_telemetry'
+
+  # 2. Custom Python Monitoring Agent running on Ubuntu host
+  # Exposes custom psutil/kernel metrics on port 9101
+  - job_name: 'python-agent'
+    scrape_interval: 15s
+    scrape_timeout: 10s
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['host.docker.internal:9101']
+        labels:
+          instance: 'rubi'
+          collector_type: 'python_agent'
+          role: 'custom_telemetry'
+
+  # 3. Prometheus Server Self-Monitoring
+  # Scrapes Prometheus internal time-series and query metrics
+  - job_name: 'prometheus'
+    scrape_interval: 15s
+    scrape_timeout: 10s
+    static_configs:
+      - targets: ['localhost:9090']
+        labels:
+          instance: 'lab-prometheus'
+          collector_type: 'prometheus_internal'
+          role: 'monitoring_core'
+
+  # 4. Blackbox Exporter: Synthetic HTTP/HTTPS Probing
+  - job_name: 'blackbox-http'
+    scrape_interval: 15s
+    scrape_timeout: 10s
+    metrics_path: /probe
+    params:
+      module: [http_2xx]
+    static_configs:
+      - targets:
+          - 'http://lab-prometheus:9090/-/healthy'
+          - 'http://alertmanager:9093/-/healthy'
+          - 'http://host.docker.internal:9100/metrics'
+          - 'http://host.docker.internal:9101/metrics'
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: 'blackbox-exporter:9115'
+      - target_label: probe_type
+        replacement: 'http'
+
+  # 5. Blackbox Exporter: Synthetic TCP Socket Probing
+  - job_name: 'blackbox-tcp'
+    scrape_interval: 15s
+    scrape_timeout: 10s
+    metrics_path: /probe
+    params:
+      module: [tcp_connect]
+    static_configs:
+      - targets:
+          - 'host.docker.internal:22'
+          - 'host.docker.internal:9100'
+          - 'host.docker.internal:9101'
+          - 'alertmanager:9093'
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: 'blackbox-exporter:9115'
+      - target_label: probe_type
+        replacement: 'tcp'
+
+  # 6. Blackbox Exporter: Synthetic DNS Probing
+  - job_name: 'blackbox-dns'
+    scrape_interval: 15s
+    scrape_timeout: 10s
+    metrics_path: /probe
+    params:
+      module: [dns_udp]
+    # Note on Architecture & Network Boundaries:
+    # Probes external public recursive DNS resolvers to measure outbound UDP DNS reachability.
+    # These public resolvers (1.1.1.1, 8.8.8.8) represent external upstream internet dependencies.
+    # In contrast, host-local resolver availability (systemd-resolved listening on 127.0.0.53:53)
+    # is isolated to the host loopback and is monitored natively on the host via systemd unit
+    # telemetry (linux_systemd_unit_active{unit="systemd-resolved.service"}) and systemd_monitor.sh.
+    static_configs:
+      - targets:
+          - '1.1.1.1:53'  # External dependency: Cloudflare DNS (Anycast)
+          - '8.8.8.8:53'  # External dependency: Google Public DNS (Anycast)
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: 'blackbox-exporter:9115'
+      - target_label: probe_type
+        replacement: 'dns'
+
+  # 7. Blackbox Exporter: Synthetic ICMP Echo Probing
+  - job_name: 'blackbox-icmp'
+    scrape_interval: 15s
+    scrape_timeout: 10s
+    metrics_path: /probe
+    params:
+      module: [icmp_probe]
+    static_configs:
+      - targets:
+          - 'host.docker.internal'
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: 'blackbox-exporter:9115'
+      - target_label: probe_type
+        replacement: 'icmp'
