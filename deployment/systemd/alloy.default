@@ -1,0 +1,12 @@
+# /etc/default/alloy
+# Environment configuration for native Grafana Alloy daemon
+# Project: Linux System Monitoring & Reliability Lab
+
+# Configuration file path for Alloy default engine
+CONFIG_FILE="/etc/alloy/config.alloy"
+
+# Bound to loopback port 12346 to prevent conflict with containerized Alloy on port 12345
+CUSTOM_ARGS="--server.http.listen-addr=127.0.0.1:12346"
+
+# Restart on system upgrade
+RESTART_ON_UPGRADE=true
