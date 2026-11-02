@@ -1,0 +1,58 @@
+# Blackbox Exporter Configuration
+# Project: Linux System Monitoring & Reliability Lab
+# Role: Agent 7 (Senior SRE - Incident Detection & Blackbox Monitoring)
+# Capabilities: HTTP/HTTPS, TCP socket, DNS UDP, and ICMP probing
+
+modules:
+  # 1. Standard HTTP/HTTPS 2xx probe
+  http_2xx:
+    prober: http
+    timeout: 5s
+    http:
+      valid_http_versions: ["HTTP/1.0", "HTTP/1.1", "HTTP/2.0"]
+      valid_status_codes: [] # Defaults to 2xx
+      method: GET
+      preferred_ip_protocol: ip4
+      ip_protocol_fallback: false
+      tls_config:
+        insecure_skip_verify: false
+
+  # 2. HTTP POST probe with payload
+  http_post_2xx:
+    prober: http
+    timeout: 5s
+    http:
+      valid_http_versions: ["HTTP/1.1", "HTTP/2.0"]
+      valid_status_codes: []
+      method: POST
+      headers:
+        Content-Type: application/json
+      body: '{"probe": "synthetic_healthcheck"}'
+      preferred_ip_protocol: ip4
+
+  # 3. Raw TCP connect handshake probe
+  tcp_connect:
+    prober: tcp
+    timeout: 5s
+    tcp:
+      preferred_ip_protocol: ip4
+
+  # 4. DNS resolution probe via UDP
+  dns_udp:
+    prober: dns
+    timeout: 5s
+    dns:
+      transport_protocol: udp
+      preferred_ip_protocol: ip4
+      query_name: "example.com"
+      query_type: "A"
+      valid_rcodes:
+        - NOERROR
+
+  # 5. ICMP Echo (ping) probe
+  # Note: Requires CAP_NET_RAW capability on container
+  icmp_probe:
+    prober: icmp
+    timeout: 5s
+    icmp:
+      preferred_ip_protocol: ip4
