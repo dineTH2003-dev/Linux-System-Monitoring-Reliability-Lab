@@ -1,0 +1,47 @@
+processor	: 0
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 186
+model name	: Intel(R) Core(TM) i7-TestModel
+stepping	: 2
+cpu MHz		: 2400.000
+physical id	: 0
+siblings	: 4
+core id		: 0
+cpu cores	: 2
+
+processor	: 1
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 186
+model name	: Intel(R) Core(TM) i7-TestModel
+stepping	: 2
+cpu MHz		: 2400.000
+physical id	: 0
+siblings	: 4
+core id		: 0
+cpu cores	: 2
+
+processor	: 2
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 186
+model name	: Intel(R) Core(TM) i7-TestModel
+stepping	: 2
+cpu MHz		: 2400.000
+physical id	: 0
+siblings	: 4
+core id		: 1
+cpu cores	: 2
+
+processor	: 3
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 186
+model name	: Intel(R) Core(TM) i7-TestModel
+stepping	: 2
+cpu MHz		: 2400.000
+physical id	: 0
+siblings	: 4
+core id		: 1
+cpu cores	: 2
