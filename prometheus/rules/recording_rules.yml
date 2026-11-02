@@ -1,0 +1,148 @@
+# Prometheus Recording Rules
+# Project: Linux System Monitoring & Reliability Lab
+# Specification: Pre-computed aggregates for high-frequency dashboard queries and alerts
+
+groups:
+  - name: node_rules_cpu
+    interval: 15s
+    rules:
+      - record: instance:node_cpu_utilization:rate5m
+        expr: 100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)
+        labels:
+          subsystem: cpu
+
+      - record: instance:node_cpu_mode:rate5m
+        expr: sum by (instance, mode) (rate(node_cpu_seconds_total[5m]))
+        labels:
+          subsystem: cpu
+
+      - record: instance:node_cpu_pressure:rate1m
+        expr: rate(node_pressure_cpu_waiting_seconds_total[1m]) * 100
+        labels:
+          subsystem: cpu
+
+  - name: node_rules_memory
+    interval: 15s
+    rules:
+      - record: instance:node_memory_utilization:ratio
+        expr: 1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)
+        labels:
+          subsystem: memory
+
+      - record: instance:node_memory_used_bytes:bytes
+        expr: node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes
+        labels:
+          subsystem: memory
+
+      - record: instance:node_swap_io_bytes:rate1m
+        expr: (rate(node_vmstat_pswpin[1m]) + rate(node_vmstat_pswpout[1m])) * 4096
+        labels:
+          subsystem: swap
+
+      - record: instance:node_memory_pressure_waiting:rate1m
+        expr: rate(node_pressure_memory_waiting_seconds_total[1m]) * 100
+        labels:
+          subsystem: memory
+
+      - record: instance:node_memory_pressure_stalled:rate1m
+        expr: rate(node_pressure_memory_stalled_seconds_total[1m]) * 100
+        labels:
+          subsystem: memory
+
+  - name: node_rules_storage
+    interval: 15s
+    rules:
+      - record: instance:node_filesystem_utilization:ratio
+        expr: 1 - (node_filesystem_avail_bytes{fstype=~"ext4|xfs"} / node_filesystem_size_bytes{fstype=~"ext4|xfs"})
+        labels:
+          subsystem: storage
+
+      - record: instance:node_filesystem_inodes_utilization:ratio
+        expr: 1 - (node_filesystem_files_free{fstype=~"ext4|xfs"} / node_filesystem_files{fstype=~"ext4|xfs"})
+        labels:
+          subsystem: storage
+
+      - record: instance:node_disk_read_bytes:rate1m
+        expr: sum by (instance, device) (rate(node_disk_read_bytes_total{device=~"nvme.*|sd.*|vd.*"}[1m]))
+        labels:
+          subsystem: disk_io
+
+      - record: instance:node_disk_written_bytes:rate1m
+        expr: sum by (instance, device) (rate(node_disk_written_bytes_total{device=~"nvme.*|sd.*|vd.*"}[1m]))
+        labels:
+          subsystem: disk_io
+
+      - record: instance:node_disk_iops:rate1m
+        expr: sum by (instance, device) (rate(node_disk_reads_completed_total{device=~"nvme.*|sd.*|vd.*"}[1m]) + rate(node_disk_writes_completed_total{device=~"nvme.*|sd.*|vd.*"}[1m]))
+        labels:
+          subsystem: disk_io
+
+      - record: instance:node_disk_read_latency_seconds:rate1m
+        expr: rate(node_disk_read_time_seconds_total{device=~"nvme.*|sd.*|vd.*"}[1m]) / clamp_min(rate(node_disk_reads_completed_total{device=~"nvme.*|sd.*|vd.*"}[1m]), 0.001)
+        labels:
+          subsystem: disk_io
+
+      - record: instance:node_disk_write_latency_seconds:rate1m
+        expr: rate(node_disk_write_time_seconds_total{device=~"nvme.*|sd.*|vd.*"}[1m]) / clamp_min(rate(node_disk_writes_completed_total{device=~"nvme.*|sd.*|vd.*"}[1m]), 0.001)
+        labels:
+          subsystem: disk_io
+
+  - name: node_rules_network
+    interval: 15s
+    rules:
+      - record: instance:node_network_receive_bytes:rate1m
+        expr: sum by (instance, device) (rate(node_network_receive_bytes_total{device!~"lo|docker.*|veth.*"}[1m]))
+        labels:
+          subsystem: network
+
+      - record: instance:node_network_transmit_bytes:rate1m
+        expr: sum by (instance, device) (rate(node_network_transmit_bytes_total{device!~"lo|docker.*|veth.*"}[1m]))
+        labels:
+          subsystem: network
+
+      - record: instance:node_network_packets_rx:rate1m
+        expr: sum by (instance, device) (rate(node_network_receive_packets_total{device!~"lo|docker.*|veth.*"}[1m]))
+        labels:
+          subsystem: network
+
+      - record: instance:node_network_packets_tx:rate1m
+        expr: sum by (instance, device) (rate(node_network_transmit_packets_total{device!~"lo|docker.*|veth.*"}[1m]))
+        labels:
+          subsystem: network
+
+      - record: instance:node_network_errors:rate1m
+        expr: sum by (instance, device) (rate(node_network_receive_errs_total{device!~"lo|docker.*|veth.*"}[1m]) + rate(node_network_transmit_errs_total{device!~"lo|docker.*|veth.*"}[1m]))
+        labels:
+          subsystem: network
+
+      - record: instance:node_network_drops:rate1m
+        expr: sum by (instance, device) (rate(node_network_receive_drop_total{device!~"lo|docker.*|veth.*"}[1m]) + rate(node_network_transmit_drop_total{device!~"lo|docker.*|veth.*"}[1m]))
+        labels:
+          subsystem: network
+
+  - name: custom_agent_rules
+    interval: 15s
+    rules:
+      - record: instance:custom_cpu_utilization:ratio
+        expr: linux_cpu_utilization_ratio
+        labels:
+          subsystem: cpu
+          collector: custom_agent
+
+      - record: instance:custom_memory_utilization:ratio
+        expr: 1 - (linux_memory_available_bytes / linux_memory_total_bytes)
+        labels:
+          subsystem: memory
+          collector: custom_agent
+
+      - record: instance:custom_swap_io_bytes:rate1m
+        expr: (rate(linux_swap_in_pages_total[1m]) + rate(linux_swap_out_pages_total[1m])) * 4096
+        labels:
+          subsystem: swap
+          collector: custom_agent
+
+      - record: instance:custom_disk_throughput_bytes:rate1m
+        expr: sum by (instance, device) (rate(linux_disk_read_bytes_total[1m]) + rate(linux_disk_written_bytes_total[1m]))
+        labels:
+          subsystem: disk_io
+          collector: custom_agent
