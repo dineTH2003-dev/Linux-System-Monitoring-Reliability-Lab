@@ -1,10 +1,7 @@
 # Site Reliability Engineering (SRE) Framework: SLI & SLO Specification
 
 **Project:** Linux System Monitoring & Reliability Lab  
-**Document Ref:** SRE-ARCH-001  
-**Author:** Senior Site Reliability Engineer (Agent 9 — SLI/SLO Specialist)  
-**Host Target:** Ubuntu 24.04 LTS (`rubi`, Linux Kernel `7.0.0-38-generic`, Intel Core i7-1355U)  
-**Status:** Approved & Operational  
+**Scope:** Service Level Indicators (SLIs), Service Level Objectives (SLOs) & Mathematical Models  
 
 ---
 

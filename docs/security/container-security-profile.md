@@ -1,9 +1,7 @@
 # Container Security Profile & Hardening Matrix
 
 **Project:** Linux System Monitoring & Reliability Lab  
-**Document Ref:** SEC-02 — Container Security Profile  
-**Author:** Agent 11 (Infrastructure Security & Deployment Engineer)  
-**Standard:** Alignment with CIS Docker Benchmark Principles & NIST SP 800-190 (Project Hardening Profile)
+**Scope:** Docker Security Controls, CIS Benchmark Principles, Capability Dropping & Filesystem Immutability  
 
 ---
 

@@ -1,0 +1,2416 @@
+{
+  "timestamp": "2026-11-03T09:20:34.133014+00:00",
+  "kernel": "Linux rubi 7.0.0-38-generic #38~24.04.4-Ubuntu SMP PREEMPT_DYNAMIC Mon Sep 14 16:37:11 UTC 2 x86_64 x86_64 x86_64 GNU/Linux",
+  "containers": [
+    [
+      "lab-alertmanager",
+      "prom/alertmanager:v0.27.0",
+      "Up 14 minutes (healthy)",
+      "127.0.0.1:9094->9093/tcp"
+    ],
+    [
+      "lab-loki",
+      "grafana/loki:3.0.0",
+      "Up 14 minutes (healthy)",
+      "127.0.0.1:3100->3100/tcp"
+    ],
+    [
+      "resiliencelab-worker",
+      "chaos-engineering-automated-incident-recovery-platform-worker",
+      "Up 14 minutes",
+      "0.0.0.0:8001->8001/tcp, [::]:8001->8001/tcp"
+    ],
+    [
+      "resiliencelab-api",
+      "chaos-engineering-automated-incident-recovery-platform-api",
+      "Up 14 minutes (healthy)",
+      "0.0.0.0:8000->8000/tcp, [::]:8000->8000/tcp"
+    ],
+    [
+      "lab-grafana",
+      "grafana/grafana:10.4.1",
+      "Up 14 minutes (healthy)",
+      "127.0.0.1:3001->3000/tcp"
+    ],
+    [
+      "lab-alloy",
+      "grafana/alloy:v1.0.0",
+      "Up 14 minutes (healthy)",
+      "127.0.0.1:12345->12345/tcp"
+    ],
+    [
+      "lab-prometheus",
+      "prom/prometheus:v2.51.0",
+      "Up 14 minutes (healthy)",
+      "127.0.0.1:9091->9090/tcp"
+    ],
+    [
+      "lab-blackbox-exporter",
+      "prom/blackbox-exporter:v0.25.0",
+      "Up 14 minutes (healthy)",
+      "127.0.0.1:9115->9115/tcp"
+    ],
+    [
+      "taskmanager-postgres",
+      "postgres:16-alpine",
+      "Up 14 minutes (healthy)",
+      "0.0.0.0:5433->5432/tcp, [::]:5433->5432/tcp"
+    ]
+  ],
+  "targets": [
+    {
+      "discoveredLabels": {
+        "__address__": "1.1.1.1:53",
+        "__metrics_path__": "/probe",
+        "__param_module": "dns_udp",
+        "__scheme__": "http",
+        "__scrape_interval__": "15s",
+        "__scrape_timeout__": "10s",
+        "job": "blackbox-dns"
+      },
+      "labels": {
+        "instance": "1.1.1.1:53",
+        "job": "blackbox-dns",
+        "probe_type": "dns"
+      },
+      "scrapePool": "blackbox-dns",
+      "scrapeUrl": "http://blackbox-exporter:9115/probe?module=dns_udp&target=1.1.1.1%3A53",
+      "globalUrl": "http://blackbox-exporter:9115/probe?module=dns_udp&target=1.1.1.1%3A53",
+      "lastError": "",
+      "lastScrape": "2026-11-03T09:20:22.322066616Z",
+      "lastScrapeDuration": 0.031909183,
+      "health": "up",
+      "scrapeInterval": "15s",
+      "scrapeTimeout": "10s"
+    },
+    {
+      "discoveredLabels": {
+        "__address__": "8.8.8.8:53",
+        "__metrics_path__": "/probe",
+        "__param_module": "dns_udp",
+        "__scheme__": "http",
+        "__scrape_interval__": "15s",
+        "__scrape_timeout__": "10s",
+        "job": "blackbox-dns"
+      },
+      "labels": {
+        "instance": "8.8.8.8:53",
+        "job": "blackbox-dns",
+        "probe_type": "dns"
+      },
+      "scrapePool": "blackbox-dns",
+      "scrapeUrl": "http://blackbox-exporter:9115/probe?module=dns_udp&target=8.8.8.8%3A53",
+      "globalUrl": "http://blackbox-exporter:9115/probe?module=dns_udp&target=8.8.8.8%3A53",
+      "lastError": "",
+      "lastScrape": "2026-11-03T09:20:30.405115901Z",
+      "lastScrapeDuration": 0.055601743,
+      "health": "up",
+      "scrapeInterval": "15s",
+      "scrapeTimeout": "10s"
+    },
+    {
+      "discoveredLabels": {
+        "__address__": "http://alertmanager:9093/-/healthy",
+        "__metrics_path__": "/probe",
+        "__param_module": "http_2xx",
+        "__scheme__": "http",
+        "__scrape_interval__": "15s",
+        "__scrape_timeout__": "10s",
+        "job": "blackbox-http"
+      },
+      "labels": {
+        "instance": "http://alertmanager:9093/-/healthy",
+        "job": "blackbox-http",
+        "probe_type": "http"
+      },
+      "scrapePool": "blackbox-http",
+      "scrapeUrl": "http://blackbox-exporter:9115/probe?module=http_2xx&target=http%3A%2F%2Falertmanager%3A9093%2F-%2Fhealthy",
+      "globalUrl": "http://blackbox-exporter:9115/probe?module=http_2xx&target=http%3A%2F%2Falertmanager%3A9093%2F-%2Fhealthy",
+      "lastError": "",
+      "lastScrape": "2026-11-03T09:20:24.088966406Z",
+      "lastScrapeDuration": 0.101987506,
+      "health": "up",
+      "scrapeInterval": "15s",
+      "scrapeTimeout": "10s"
+    },
+    {
+      "discoveredLabels": {
+        "__address__": "http://host.docker.internal:9100/metrics",
+        "__metrics_path__": "/probe",
+        "__param_module": "http_2xx",
+        "__scheme__": "http",
+        "__scrape_interval__": "15s",
+        "__scrape_timeout__": "10s",
+        "job": "blackbox-http"
+      },
+      "labels": {
+        "instance": "http://host.docker.internal:9100/metrics",
+        "job": "blackbox-http",
+        "probe_type": "http"
+      },
+      "scrapePool": "blackbox-http",
+      "scrapeUrl": "http://blackbox-exporter:9115/probe?module=http_2xx&target=http%3A%2F%2Fhost.docker.internal%3A9100%2Fmetrics",
+      "globalUrl": "http://blackbox-exporter:9115/probe?module=http_2xx&target=http%3A%2F%2Fhost.docker.internal%3A9100%2Fmetrics",
+      "lastError": "",
+      "lastScrape": "2026-11-03T09:20:26.241329495Z",
+      "lastScrapeDuration": 0.631354021,
+      "health": "up",
+      "scrapeInterval": "15s",
+      "scrapeTimeout": "10s"
+    },
+    {
+      "discoveredLabels": {
+        "__address__": "http://host.docker.internal:9101/metrics",
+        "__metrics_path__": "/probe",
+        "__param_module": "http_2xx",
+        "__scheme__": "http",
+        "__scrape_interval__": "15s",
+        "__scrape_timeout__": "10s",
+        "job": "blackbox-http"
+      },
+      "labels": {
+        "instance": "http://host.docker.internal:9101/metrics",
+        "job": "blackbox-http",
+        "probe_type": "http"
+      },
+      "scrapePool": "blackbox-http",
+      "scrapeUrl": "http://blackbox-exporter:9115/probe?module=http_2xx&target=http%3A%2F%2Fhost.docker.internal%3A9101%2Fmetrics",
+      "globalUrl": "http://blackbox-exporter:9115/probe?module=http_2xx&target=http%3A%2F%2Fhost.docker.internal%3A9101%2Fmetrics",
+      "lastError": "",
+      "lastScrape": "2026-11-03T09:20:21.281031089Z",
+      "lastScrapeDuration": 0.411724597,
+      "health": "up",
+      "scrapeInterval": "15s",
+      "scrapeTimeout": "10s"
+    },
+    {
+      "discoveredLabels": {
+        "__address__": "http://lab-prometheus:9090/-/healthy",
+        "__metrics_path__": "/probe",
+        "__param_module": "http_2xx",
+        "__scheme__": "http",
+        "__scrape_interval__": "15s",
+        "__scrape_timeout__": "10s",
+        "job": "blackbox-http"
+      },
+      "labels": {
+        "instance": "http://lab-prometheus:9090/-/healthy",
+        "job": "blackbox-http",
+        "probe_type": "http"
+      },
+      "scrapePool": "blackbox-http",
+      "scrapeUrl": "http://blackbox-exporter:9115/probe?module=http_2xx&target=http%3A%2F%2Flab-prometheus%3A9090%2F-%2Fhealthy",
+      "globalUrl": "http://blackbox-exporter:9115/probe?module=http_2xx&target=http%3A%2F%2Flab-prometheus%3A9090%2F-%2Fhealthy",
+      "lastError": "",
+      "lastScrape": "2026-11-03T09:20:24.441057307Z",
+      "lastScrapeDuration": 0.046288162,
+      "health": "up",
+      "scrapeInterval": "15s",
+      "scrapeTimeout": "10s"
+    },
+    {
+      "discoveredLabels": {
+        "__address__": "host.docker.internal",
+        "__metrics_path__": "/probe",
+        "__param_module": "icmp_probe",
+        "__scheme__": "http",
+        "__scrape_interval__": "15s",
+        "__scrape_timeout__": "10s",
+        "job": "blackbox-icmp"
+      },
+      "labels": {
+        "instance": "host.docker.internal",
+        "job": "blackbox-icmp",
+        "probe_type": "icmp"
+      },
+      "scrapePool": "blackbox-icmp",
+      "scrapeUrl": "http://blackbox-exporter:9115/probe?module=icmp_probe&target=host.docker.internal",
+      "globalUrl": "http://blackbox-exporter:9115/probe?module=icmp_probe&target=host.docker.internal",
+      "lastError": "",
+      "lastScrape": "2026-11-03T09:20:21.031204716Z",
+      "lastScrapeDuration": 0.014441439,
+      "health": "up",
+      "scrapeInterval": "15s",
+      "scrapeTimeout": "10s"
+    },
+    {
+      "discoveredLabels": {
+        "__address__": "host.docker.internal:22",
+        "__metrics_path__": "/probe",
+        "__param_module": "tcp_connect",
+        "__scheme__": "http",
+        "__scrape_interval__": "15s",
+        "__scrape_timeout__": "10s",
+        "job": "blackbox-tcp"
+      },
+      "labels": {
+        "instance": "host.docker.internal:22",
+        "job": "blackbox-tcp",
+        "probe_type": "tcp"
+      },
+      "scrapePool": "blackbox-tcp",
+      "scrapeUrl": "http://blackbox-exporter:9115/probe?module=tcp_connect&target=host.docker.internal%3A22",
+      "globalUrl": "http://blackbox-exporter:9115/probe?module=tcp_connect&target=host.docker.internal%3A22",
+      "lastError": "",
+      "lastScrape": "2026-11-03T09:20:20.928449172Z",
+      "lastScrapeDuration": 0.01826538,
+      "health": "up",
+      "scrapeInterval": "15s",
+      "scrapeTimeout": "10s"
+    },
+    {
+      "discoveredLabels": {
+        "__address__": "host.docker.internal:9100",
+        "__metrics_path__": "/probe",
+        "__param_module": "tcp_connect",
+        "__scheme__": "http",
+        "__scrape_interval__": "15s",
+        "__scrape_timeout__": "10s",
+        "job": "blackbox-tcp"
+      },
+      "labels": {
+        "instance": "host.docker.internal:9100",
+        "job": "blackbox-tcp",
+        "probe_type": "tcp"
+      },
+      "scrapePool": "blackbox-tcp",
+      "scrapeUrl": "http://blackbox-exporter:9115/probe?module=tcp_connect&target=host.docker.internal%3A9100",
+      "globalUrl": "http://blackbox-exporter:9115/probe?module=tcp_connect&target=host.docker.internal%3A9100",
+      "lastError": "",
+      "lastScrape": "2026-11-03T09:20:19.82855422Z",
+      "lastScrapeDuration": 0.029158956,
+      "health": "up",
+      "scrapeInterval": "15s",
+      "scrapeTimeout": "10s"
+    },
+    {
+      "discoveredLabels": {
+        "__address__": "host.docker.internal:9101",
+        "__metrics_path__": "/probe",
+        "__param_module": "tcp_connect",
+        "__scheme__": "http",
+        "__scrape_interval__": "15s",
+        "__scrape_timeout__": "10s",
+        "job": "blackbox-tcp"
+      },
+      "labels": {
+        "instance": "host.docker.internal:9101",
+        "job": "blackbox-tcp",
+        "probe_type": "tcp"
+      },
+      "scrapePool": "blackbox-tcp",
+      "scrapeUrl": "http://blackbox-exporter:9115/probe?module=tcp_connect&target=host.docker.internal%3A9101",
+      "globalUrl": "http://blackbox-exporter:9115/probe?module=tcp_connect&target=host.docker.internal%3A9101",
+      "lastError": "",
+      "lastScrape": "2026-11-03T09:20:20.519342281Z",
+      "lastScrapeDuration": 0.018061015,
+      "health": "up",
+      "scrapeInterval": "15s",
+      "scrapeTimeout": "10s"
+    },
+    {
+      "discoveredLabels": {
+        "__address__": "alertmanager:9093",
+        "__metrics_path__": "/probe",
+        "__param_module": "tcp_connect",
+        "__scheme__": "http",
+        "__scrape_interval__": "15s",
+        "__scrape_timeout__": "10s",
+        "job": "blackbox-tcp"
+      },
+      "labels": {
+        "instance": "alertmanager:9093",
+        "job": "blackbox-tcp",
+        "probe_type": "tcp"
+      },
+      "scrapePool": "blackbox-tcp",
+      "scrapeUrl": "http://blackbox-exporter:9115/probe?module=tcp_connect&target=alertmanager%3A9093",
+      "globalUrl": "http://blackbox-exporter:9115/probe?module=tcp_connect&target=alertmanager%3A9093",
+      "lastError": "",
+      "lastScrape": "2026-11-03T09:20:28.381513792Z",
+      "lastScrapeDuration": 0.016527753,
+      "health": "up",
+      "scrapeInterval": "15s",
+      "scrapeTimeout": "10s"
+    },
+    {
+      "discoveredLabels": {
+        "__address__": "host.docker.internal:9100",
+        "__metrics_path__": "/metrics",
+        "__scheme__": "http",
+        "__scrape_interval__": "15s",
+        "__scrape_timeout__": "10s",
+        "collector_type": "node_exporter",
+        "instance": "rubi",
+        "job": "node",
+        "role": "host_telemetry"
+      },
+      "labels": {
+        "collector_type": "node_exporter",
+        "instance": "rubi",
+        "job": "node",
+        "role": "host_telemetry"
+      },
+      "scrapePool": "node",
+      "scrapeUrl": "http://host.docker.internal:9100/metrics",
+      "globalUrl": "http://host.docker.internal:9100/metrics",
+      "lastError": "",
+      "lastScrape": "2026-11-03T09:20:23.974004182Z",
+      "lastScrapeDuration": 0.773406468,
+      "health": "up",
+      "scrapeInterval": "15s",
+      "scrapeTimeout": "10s"
+    },
+    {
+      "discoveredLabels": {
+        "__address__": "localhost:9090",
+        "__metrics_path__": "/metrics",
+        "__scheme__": "http",
+        "__scrape_interval__": "15s",
+        "__scrape_timeout__": "10s",
+        "collector_type": "prometheus_internal",
+        "instance": "lab-prometheus",
+        "job": "prometheus",
+        "role": "monitoring_core"
+      },
+      "labels": {
+        "collector_type": "prometheus_internal",
+        "instance": "lab-prometheus",
+        "job": "prometheus",
+        "role": "monitoring_core"
+      },
+      "scrapePool": "prometheus",
+      "scrapeUrl": "http://localhost:9090/metrics",
+      "globalUrl": "http://99d8b4844ad9:9090/metrics",
+      "lastError": "",
+      "lastScrape": "2026-11-03T09:20:30.214229066Z",
+      "lastScrapeDuration": 0.041213555,
+      "health": "up",
+      "scrapeInterval": "15s",
+      "scrapeTimeout": "10s"
+    },
+    {
+      "discoveredLabels": {
+        "__address__": "host.docker.internal:9101",
+        "__metrics_path__": "/metrics",
+        "__scheme__": "http",
+        "__scrape_interval__": "15s",
+        "__scrape_timeout__": "10s",
+        "collector_type": "python_agent",
+        "instance": "rubi",
+        "job": "python-agent",
+        "role": "custom_telemetry"
+      },
+      "labels": {
+        "collector_type": "python_agent",
+        "instance": "rubi",
+        "job": "python-agent",
+        "role": "custom_telemetry"
+      },
+      "scrapePool": "python-agent",
+      "scrapeUrl": "http://host.docker.internal:9101/metrics",
+      "globalUrl": "http://host.docker.internal:9101/metrics",
+      "lastError": "",
+      "lastScrape": "2026-11-03T09:20:19.9162665Z",
+      "lastScrapeDuration": 0.351379592,
+      "health": "up",
+      "scrapeInterval": "15s",
+      "scrapeTimeout": "10s"
+    }
+  ],
+  "rules": [
+    {
+      "name": "blackbox_endpoint_alerts",
+      "file": "/etc/prometheus/alerts/blackbox_alerts.yml",
+      "rules": [
+        {
+          "state": "inactive",
+          "name": "BlackboxEndpointDown",
+          "query": "probe_success == 0",
+          "duration": 60,
+          "keepFiringFor": 0,
+          "labels": {
+            "category": "availability",
+            "impact": "endpoint_unreachable",
+            "severity": "critical",
+            "subsystem": "blackbox"
+          },
+          "annotations": {
+            "description": "Blackbox probe of type '{{ $labels.probe_type }}' against {{ $labels.instance }} has failed for >1 minute. Target service is unreachable or rejecting connections.",
+            "diagnostic_command": "curl -iv {{ $labels.instance }} || nc -zv {{ $labels.instance }}",
+            "diagnostic_context": "Check network route, listening socket, firewall rules, and target service daemon.",
+            "runbook_url": "docs/troubleshooting/blackbox-probe.md",
+            "summary": "Synthetic probe failed: endpoint {{ $labels.instance }} is down"
+          },
+          "alerts": [],
+          "health": "ok",
+          "evaluationTime": 0.001141061,
+          "lastEvaluation": "2026-11-03T09:20:24.574564117Z",
+          "type": "alerting"
+        },
+        {
+          "state": "inactive",
+          "name": "BlackboxHttpProbeFailed",
+          "query": "(probe_http_status_code <= 199 or probe_http_status_code >= 400) and probe_success == 0",
+          "duration": 60,
+          "keepFiringFor": 0,
+          "labels": {
+            "category": "availability",
+            "impact": "http_error_response",
+            "severity": "critical",
+            "subsystem": "blackbox"
+          },
+          "annotations": {
+            "description": "Blackbox HTTP probe against {{ $labels.instance }} returned non-2xx status code {{ $value }}. Application is returning errors (5xx/4xx) or redirect loop.",
+            "diagnostic_command": "curl -sI {{ $labels.instance }}",
+            "diagnostic_context": "Inspect web server / reverse proxy access logs and backend health.",
+            "runbook_url": "docs/troubleshooting/blackbox-probe.md",
+            "summary": "HTTP probe failure: {{ $labels.instance }} returned HTTP {{ $value }}"
+          },
+          "alerts": [],
+          "health": "ok",
+          "evaluationTime": 0.001466653,
+          "lastEvaluation": "2026-11-03T09:20:24.575725387Z",
+          "type": "alerting"
+        },
+        {
+          "state": "inactive",
+          "name": "BlackboxProbeLatencyHigh",
+          "query": "probe_duration_seconds > 1",
+          "duration": 180,
+          "keepFiringFor": 0,
+          "labels": {
+            "category": "latency",
+            "impact": "slow_endpoint_response",
+            "severity": "warning",
+            "subsystem": "blackbox"
+          },
+          "annotations": {
+            "description": "Probe duration for {{ $labels.instance }} is {{ $value | printf \"%.2f\" }}s (>1.0s) sustained over 3 minutes. Degraded user experience or backend queueing.",
+            "diagnostic_command": "curl -w '@curl-format.txt' -o /dev/null -s {{ $labels.instance }}",
+            "diagnostic_context": "Examine probe phase durations (DNS, TCP connect, TLS handshake, processing).",
+            "runbook_url": "docs/troubleshooting/blackbox-probe.md",
+            "summary": "High synthetic probe response latency on {{ $labels.instance }} ({{ $value | printf \"%.2f\" }}s)"
+          },
+          "alerts": [],
+          "health": "ok",
+          "evaluationTime": 0.000749911,
+          "lastEvaluation": "2026-11-03T09:20:24.577209898Z",
+          "type": "alerting"
+        },
+        {
+          "state": "inactive",
+          "name": "BlackboxProbeSlowCritical",
+          "query": "probe_duration_seconds > 3",
+          "duration": 60,
+          "keepFiringFor": 0,
+          "labels": {
+            "category": "latency",
+            "impact": "severe_latency_or_near_timeout",
+            "severity": "critical",
+            "subsystem": "blackbox"
+          },
+          "annotations": {
+            "description": "Probe duration for {{ $labels.instance }} is {{ $value | printf \"%.2f\" }}s (>3.0s), approaching probe timeout (5.0s). Near total transaction stalls.",
+            "diagnostic_command": "curl -s -w 'time_connect: %{time_connect}s\ntime_starttransfer: %{time_starttransfer}s\ntime_total: %{time_total}s\n' -o /dev/null {{ $labels.instance }}",
+            "diagnostic_context": "Backend worker thread starvation or database lock contention.",
+            "runbook_url": "docs/troubleshooting/blackbox-probe.md",
+            "summary": "Critical probe latency on {{ $labels.instance }} ({{ $value | printf \"%.2f\" }}s)"
+          },
+          "alerts": [],
+          "health": "ok",
+          "evaluationTime": 0.000597878,
+          "lastEvaluation": "2026-11-03T09:20:24.577972099Z",
+          "type": "alerting"
+        },
+        {
+          "state": "inactive",
+          "name": "BlackboxSslCertExpiring",
+          "query": "(probe_ssl_earliest_cert_expiry - time()) < (86400 * 14) and probe_ssl_earliest_cert_expiry > 0",
+          "duration": 3600,
+          "keepFiringFor": 0,
+          "labels": {
+            "category": "security",
+            "impact": "tls_certificate_expiration",
+            "severity": "warning",
+            "subsystem": "blackbox"
+          },
+          "annotations": {
+            "description": "The SSL/TLS certificate for {{ $labels.instance }} expires in less than 14 days ({{ $value | humanizeDuration }}). Renew certificate immediately to prevent browser security blocks.",
+            "diagnostic_command": "openssl s_client -servername {{ $labels.instance }} -connect {{ $labels.instance }}:443 </dev/null 2>/dev/null | openssl x509 -noout -dates",
+            "diagnostic_context": "Check ACME / certbot renewal timers or manual certificate provisioning.",
+            "runbook_url": "docs/troubleshooting/ssl-certificate.md",
+            "summary": "TLS certificate for {{ $labels.instance }} expires in {{ $value | humanizeDuration }}"
+          },
+          "alerts": [],
+          "health": "ok",
+          "evaluationTime": 0.000681611,
+          "lastEvaluation": "2026-11-03T09:20:24.578586735Z",
+          "type": "alerting"
+        },
+        {
+          "state": "inactive",
+          "name": "BlackboxTcpConnectFailed",
+          "query": "probe_success{probe_type=\"tcp\"} == 0",
+          "duration": 60,
+          "keepFiringFor": 0,
+          "labels": {
+            "category": "availability",
+            "impact": "tcp_connection_refused",
+            "severity": "critical",
+            "subsystem": "blackbox"
+          },
+          "annotations": {
+            "description": "Synthetic TCP handshake to {{ $labels.instance }} failed for >1 minute. Port closed, service crashed, or iptables drop.",
+            "diagnostic_command": "ss -tulpn | grep -E '22|9100|9101|9090|9093'",
+            "diagnostic_context": "Verify target port is in LISTEN state on host.",
+            "runbook_url": "docs/troubleshooting/blackbox-probe.md",
+            "summary": "TCP connect probe failed for {{ $labels.instance }}"
+          },
+          "alerts": [],
+          "health": "ok",
+          "evaluationTime": 0.000422683,
+          "lastEvaluation": "2026-11-03T09:20:24.579280725Z",
+          "type": "alerting"
+        }
+      ],
+      "interval": 15,
+      "limit": 0,
+      "evaluationTime": 0.005280883,
+      "lastEvaluation": "2026-11-03T09:20:24.574431724Z"
+    },
+    {
+      "name": "compute_alerts",
+      "file": "/etc/prometheus/alerts/infrastructure_alerts.yml",
+      "rules": [
+        {
+          "state": "inactive",
+          "name": "HostHighCpuUtilizationWarning",
+          "query": "(100 - (avg by (instance) (rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)) > 85",
+          "duration": 300,
+          "keepFiringFor": 0,
+          "labels": {
+            "category": "saturation",
+            "impact": "processing_delay",
+            "severity": "warning",
+            "subsystem": "cpu"
+          },
+          "annotations": {
+            "description": "Active CPU utilization averaged {{ $value | printf \"%.1f\" }}% across all cores over a 5-minute moving window. Approaching saturation threshold.",
+            "diagnostic_command": "top -b -n 1 -o %CPU | head -n 20",
+            "diagnostic_context": "Identify high-consuming threads and run-queue contention.",
+            "runbook_url": "docs/troubleshooting/cpu-saturation.md",
+            "summary": "Elevated CPU utilization on {{ $labels.instance }} ({{ $value | printf \"%.1f\" }}%)"
+          },
+          "alerts": [],
+          "health": "ok",
+          "evaluationTime": 0.002185489,
+          "lastEvaluation": "2026-11-03T09:20:25.22251912Z",
+          "type": "alerting"
+        },
+        {
+          "state": "inactive",
+          "name": "HostHighCpuUtilizationCritical",
+          "query": "(100 - (avg by (instance) (rate(node_cpu_seconds_total{mode=\"idle\"}[3m])) * 100)) > 95",
+          "duration": 180,
+          "keepFiringFor": 0,
+          "labels": {
+            "category": "saturation",
+            "impact": "severe_service_degradation",
+            "severity": "critical",
+            "subsystem": "cpu"
+          },
+          "annotations": {
+            "description": "Total compute capacity is {{ $value | printf \"%.1f\" }}% utilized for >3 minutes. Host has virtually zero compute headroom; latency-sensitive tasks will stall.",
+            "diagnostic_command": "ps -eo pid,ppid,cmd,%cpu --sort=-%cpu | head -n 15",
+            "diagnostic_context": "Inspect top CPU hogs or rogue compilation/crypto tasks.",
+            "runbook_url": "docs/troubleshooting/cpu-saturation.md",
+            "summary": "Critical CPU saturation on {{ $labels.instance }} ({{ $value | printf \"%.1f\" }}%)"
+          },
+          "alerts": [],
+          "health": "ok",
+          "evaluationTime": 0.002583711,
+          "lastEvaluation": "2026-11-03T09:20:25.224731255Z",
+          "type": "alerting"
+        },
+        {
+          "state": "inactive",
+          "name": "HostCpuPressureHigh",
+          "query": "rate(node_pressure_cpu_waiting_seconds_total[2m]) * 100 > 25",
+          "duration": 300,
+          "keepFiringFor": 0,
+          "labels": {
+            "category": "saturation",
+            "impact": "scheduling_delay",
+            "severity": "warning",
+            "subsystem": "cpu"
+          },
+          "annotations": {
+            "description": "Linux Pressure Stall Information (PSI) shows tasks spending {{ $value | printf \"%.1f\" }}% of wall-clock time waiting in run-queues for an available CPU core.",
+            "diagnostic_command": "cat /proc/pressure/cpu",
+            "diagnostic_context": "Excessive runnable threads competing for CPU time slices.",
+            "runbook_url": "docs/troubleshooting/cpu-pressure.md",
+            "summary": "High CPU scheduling pressure on {{ $labels.instance }} ({{ $value | printf \"%.1f\" }}%)"
+          },
+          "alerts": [],
+          "health": "ok",
+          "evaluationTime": 0.000994408,
+          "lastEvaluation": "2026-11-03T09:20:25.227350188Z",
+          "type": "alerting"
+        }
+      ],
+      "interval": 15,
+      "limit": 0,
+      "evaluationTime": 0.005903463,
+      "lastEvaluation": "2026-11-03T09:20:25.222453359Z"
+    },
+    {
+      "name": "disk_io_alerts",
+      "file": "/etc/prometheus/alerts/infrastructure_alerts.yml",
+      "rules": [
+        {
+          "state": "inactive",
+          "name": "HostDiskReadLatencyHigh",
+          "query": "(rate(node_disk_read_time_seconds_total{device=~\"nvme.*|sd.*|vd.*\"}[1m]) / clamp_min(rate(node_disk_reads_completed_total{device=~\"nvme.*|sd.*|vd.*\"}[1m]), 0.001)) > 0.03",
+          "duration": 300,
+          "keepFiringFor": 0,
+          "labels": {
+            "category": "latency",
+            "impact": "read_service_time_degradation",
+            "severity": "warning",
+            "subsystem": "disk_io"
+          },
+          "annotations": {
+            "description": "Average disk read latency (r_await) on {{ $labels.device }} is {{ $value | humanizeDuration }} (>30ms) for 5 minutes. Storage queue saturation or slow NAND controller.",
+            "diagnostic_command": "iostat -xz 1 5",
+            "diagnostic_context": "Correlate with IOPS, byte throughput, and I/O pressure stall.",
+            "runbook_url": "docs/troubleshooting/disk-latency.md",
+            "summary": "High disk read latency on {{ $labels.device }} ({{ $value | humanizeDuration }})"
+          },
+          "alerts": [],
+          "health": "ok",
+          "evaluationTime": 0.001847998,
+          "lastEvaluation": "2026-11-03T09:20:33.897067423Z",
+          "type": "alerting"
+        },
+        {
+          "state": "inactive",
+          "name": "HostDiskWriteLatencyHigh",
+          "query": "(rate(node_disk_write_time_seconds_total{device=~\"nvme.*|sd.*|vd.*\"}[1m]) / clamp_min(rate(node_disk_writes_completed_total{device=~\"nvme.*|sd.*|vd.*\"}[1m]), 0.001)) > 0.05",
+          "duration": 300,
+          "keepFiringFor": 0,
+          "labels": {
+            "category": "latency",
+            "impact": "write_queue_stall",
+            "severity": "warning",
+            "subsystem": "disk_io"
+          },
+          "annotations": {
+            "description": "Average disk write latency (w_await) on {{ $labels.device }} is {{ $value | humanizeDuration }} (>50ms) for 5 minutes. Journal flushing or sync write bottlenecks.",
+            "diagnostic_command": "iostat -xz 1 5 && grep -i dirty /proc/meminfo",
+            "diagnostic_context": "Check write cache, page writeback flushes, and background sync.",
+            "runbook_url": "docs/troubleshooting/disk-latency.md",
+            "summary": "High disk write latency on {{ $labels.device }} ({{ $value | humanizeDuration }})"
+          },
+          "alerts": [],
+          "health": "ok",
+          "evaluationTime": 0.0087848,
+          "lastEvaluation": "2026-11-03T09:20:33.898933052Z",
+          "type": "alerting"
+        },
+        {
+          "state": "inactive",
+          "name": "HostIoPressureWaitingHigh",
+          "query": "rate(node_pressure_io_waiting_seconds_total[2m]) * 100 > 25",
+          "duration": 300,
+          "keepFiringFor": 0,
+          "labels": {
+            "category": "pressure",
+            "impact": "storage_queue_starvation",
+            "severity": "warning",
+            "subsystem": "disk_io"
+          },
+          "annotations": {
+            "description": "Linux PSI reports tasks spending {{ $value | printf \"%.1f\" }}% of wall-clock time waiting on storage I/O completion.",
+            "diagnostic_command": "cat /proc/pressure/io && ps -eo pid,stat,cmd | grep ' D'",
+            "diagnostic_context": "I/O subsystem is saturated; threads entering uninterruptible sleep (D state).",
+            "runbook_url": "docs/troubleshooting/io-pressure.md",
+            "summary": "High I/O pressure on {{ $labels.instance }} ({{ $value | printf \"%.1f\" }}%)"
+          },
+          "alerts": [],
+          "health": "ok",
+          "evaluationTime": 0.000797906,
+          "lastEvaluation": "2026-11-03T09:20:33.907735328Z",
+          "type": "alerting"
+        },
+        {
+          "state": "inactive",
+          "name": "HostIoPressureStalledCritical",
+          "query": "rate(node_pressure_io_stalled_seconds_total[1m]) * 100 > 10",
+          "duration": 120,
+          "keepFiringFor": 0,
+          "labels": {
+            "category": "pressure",
+            "impact": "system_wide_io_lockup",
+            "severity": "critical",
+            "subsystem": "disk_io"
+          },
+          "annotations": {
+            "description": "Linux PSI 'full' indicates that all non-idle tasks are stalled on storage I/O {{ $value | printf \"%.1f\" }}% of the time. Block device lockup or un-flushed write buffer stall.",
+            "diagnostic_command": "cat /proc/pressure/io && dmesg -T | grep -i 'blocked for more than' | tail -n 5",
+            "diagnostic_context": "Acute block layer freeze. Investigate storage controller and kernel dmesg.",
+            "runbook_url": "docs/troubleshooting/io-pressure.md",
+            "summary": "Critical I/O stall on {{ $labels.instance }} ({{ $value | printf \"%.1f\" }}%)"
+          },
+          "alerts": [],
+          "health": "ok",
+          "evaluationTime": 0.000711469,
+          "lastEvaluation": "2026-11-03T09:20:33.90854551Z",
+          "type": "alerting"
+        }
+      ],
+      "interval": 15,
+      "limit": 0,
+      "evaluationTime": 0.012242154,
+      "lastEvaluation": "2026-11-03T09:20:33.897023765Z"
+    },
+    {
+      "name": "host_availability_alerts",
+      "file": "/etc/prometheus/alerts/infrastructure_alerts.yml",
+      "rules": [
+        {
+          "state": "inactive",
+          "name": "HostUnavailable",
+          "query": "(up{job=\"node\"} == 0 and on (instance) up{job=\"python-agent\"} == 0) or (probe_success{job=\"blackbox-icmp\"} == 0)",
+          "duration": 120,
+          "keepFiringFor": 0,
+          "labels": {
+            "category": "availability",
+            "impact": "host_telemetry_blackout",
+            "severity": "critical",
+            "subsystem": "host"
+          },
+          "annotations": {
+            "description": "All telemetry exporters (node, python-agent) or ICMP ping probes for {{ $labels.instance }} have been down for >2 minutes. Possible power loss, kernel panic, or network partition.",
+            "diagnostic_command": "ping -c 3 rubi && ip neigh",
+            "diagnostic_context": "Check host power, console log, and hypervisor/network routing.",
+            "runbook_url": "docs/troubleshooting/host-unavailable.md",
+            "summary": "Host {{ $labels.instance }} is unavailable or unreachable"
+          },
+          "alerts": [],
+          "health": "ok",
+          "evaluationTime": 0.000689854,
+          "lastEvaluation": "2026-11-03T09:20:19.746928459Z",
+          "type": "alerting"
+        },
+        {
+          "state": "inactive",
+          "name": "NodeExporterUnavailable",
+          "query": "up{job=\"node\"} == 0",
+          "duration": 120,
+          "keepFiringFor": 0,
+          "labels": {
+            "category": "exporter_health",
+            "impact": "kernel_telemetry_loss",
+            "severity": "critical",
+            "subsystem": "observability"
+          },
+          "annotations": {
+            "description": "Prometheus has failed to scrape Node Exporter at {{ $labels.instance }} (:9100) for >2 minutes. Host hardware and kernel metrics are unobserved.",
+            "diagnostic_command": "systemctl status prometheus-node-exporter.service",
+            "diagnostic_context": "Daemon crash, port blockage, or OOM kill of node_exporter binary.",
+            "runbook_url": "docs/troubleshooting/target-down.md",
+            "summary": "Node Exporter scrape failure on {{ $labels.instance }}"
+          },
+          "alerts": [],
+          "health": "ok",
+          "evaluationTime": 0.00012632,
+          "lastEvaluation": "2026-11-03T09:20:19.747625951Z",
+          "type": "alerting"
+        },
+        {
+          "state": "inactive",
+          "name": "PythonAgentUnavailable",
+          "query": "up{job=\"python-agent\"} == 0",
+          "duration": 120,
+          "keepFiringFor": 0,
+          "labels": {
+            "category": "exporter_health",
+            "impact": "custom_telemetry_loss",
+            "severity": "warning",
+            "subsystem": "custom_agent"
+          },
+          "annotations": {
+            "description": "Prometheus has failed to scrape the Python monitoring agent at {{ $labels.instance }} (:9101) for >2 minutes. High-resolution process and systemd custom metrics are unavailable.",
+            "diagnostic_command": "ps aux | grep 'agent/main.py' && curl -s http://127.0.0.1:9101/metrics | head -n 5",
+            "diagnostic_context": "Python process terminated, unhandled exception, or port conflict.",
+            "runbook_url": "docs/troubleshooting/custom-agent.md",
+            "summary": "Custom Python monitoring agent down on {{ $labels.instance }}"
+          },
+          "alerts": [],
+          "health": "ok",
+          "evaluationTime": 0.00020653,
+          "lastEvaluation": "2026-11-03T09:20:19.747755732Z",
+          "type": "alerting"
+        }
+      ],
+      "interval": 15,
+      "limit": 0,
+      "evaluationTime": 0.001097883,
+      "lastEvaluation": "2026-11-03T09:20:19.746868675Z"
+    },
+    {
+      "name": "memory_alerts",
+      "file": "/etc/prometheus/alerts/infrastructure_alerts.yml",
+      "rules": [
+        {
+          "state": "inactive",
+          "name": "HostLowMemoryAvailable",
+          "query": "(node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) < 0.1",
+          "duration": 300,
+          "keepFiringFor": 0,
+          "labels": {
+            "category": "capacity",
+            "impact": "page_cache_eviction",
+            "severity": "warning",
+            "subsystem": "memory"
+          },
+          "annotations": {
+            "description": "Kernel MemAvailable is under 10% of total physical RAM (currently {{ $value | humanizePercentage }}). Background reclaim is accelerating.",
+            "diagnostic_command": "free -m && ps -eo pid,ppid,cmd,%mem --sort=-%mem | head -n 15",
+            "diagnostic_context": "Page cache dropping; disk I/O may increase as filesystem cache shrinks.",
+            "runbook_url": "docs/troubleshooting/memory-starvation.md",
+            "summary": "Low available physical memory on {{ $labels.instance }} ({{ $value | humanizePercentage }})"
+          },
+          "alerts": [],
+          "health": "ok",
+          "evaluationTime": 0.000854189,
+          "lastEvaluation": "2026-11-03T09:20:26.057546043Z",
+          "type": "alerting"
+        },
+        {
+          "state": "inactive",
+          "name": "HostCriticalMemoryAvailable",
+          "query": "(node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) < 0.05",
+          "duration": 120,
+          "keepFiringFor": 0,
+          "labels": {
+            "category": "capacity",
+            "impact": "oom_kill_imminent",
+            "severity": "critical",
+            "subsystem": "memory"
+          },
+          "annotations": {
+            "description": "Kernel MemAvailable has fallen below 5% (currently {{ $value | humanizePercentage }}). Kernel Out-Of-Memory (OOM) killer invocation is imminent.",
+            "diagnostic_command": "free -h && vmstat 1 5 && dmesg -T | grep -i oom | tail -n 10",
+            "diagnostic_context": "Emergency memory starvation. Direct reclaim failing to meet allocation requests.",
+            "runbook_url": "docs/troubleshooting/memory-starvation.md",
+            "summary": "Critical memory exhaustion on {{ $labels.instance }} ({{ $value | humanizePercentage }})"
+          },
+          "alerts": [],
+          "health": "ok",
+          "evaluationTime": 0.000458525,
+          "lastEvaluation": "2026-11-03T09:20:26.058412698Z",
+          "type": "alerting"
+        },
+        {
+          "state": "inactive",
+          "name": "HostMemoryPressureWaiting",
+          "query": "rate(node_pressure_memory_waiting_seconds_total[1m]) * 100 > 20",
+          "duration": 180,
+          "keepFiringFor": 0,
+          "labels": {
+            "category": "pressure",
+            "impact": "memory_allocation_delay",
+            "severity": "warning",
+            "subsystem": "memory"
+          },
+          "annotations": {
+            "description": "Kernel PSI shows tasks are spending {{ $value | printf \"%.1f\" }}% of wall-clock time stalled in direct page reclaim or swap-in.",
+            "diagnostic_command": "cat /proc/pressure/memory",
+            "diagnostic_context": "Working set exceeds physical RAM; memory subsystem struggling to free pages.",
+            "runbook_url": "docs/troubleshooting/memory-pressure.md",
+            "summary": "Elevated memory allocation stall on {{ $labels.instance }} ({{ $value | printf \"%.1f\" }}%)"
+          },
+          "alerts": [],
+          "health": "ok",
+          "evaluationTime": 0.001793144,
+          "lastEvaluation": "2026-11-03T09:20:26.05888176Z",
+          "type": "alerting"
+        },
+        {
+          "state": "inactive",
+          "name": "HostMemoryPressureStalled",
+          "query": "rate(node_pressure_memory_stalled_seconds_total[1m]) * 100 > 10",
+          "duration": 120,
+          "keepFiringFor": 0,
+          "labels": {
+            "category": "pressure",
+            "impact": "execution_paralysis",
+            "severity": "critical",
+            "subsystem": "memory"
+          },
+          "annotations": {
+            "description": "Kernel PSI 'full' shows that ALL non-idle tasks are simultaneously stalled on memory allocation {{ $value | printf \"%.1f\" }}% of the time.",
+            "diagnostic_command": "cat /proc/pressure/memory && vmstat -s",
+            "diagnostic_context": "System is in acute memory thrashing; complete execution freeze.",
+            "runbook_url": "docs/troubleshooting/memory-pressure.md",
+            "summary": "Severe memory thrashing stall on {{ $labels.instance }} ({{ $value | printf \"%.1f\" }}%)"
+          },
+          "alerts": [],
+          "health": "ok",
+          "evaluationTime": 0.000812179,
+          "lastEvaluation": "2026-11-03T09:20:26.060689188Z",
+          "type": "alerting"
+        },
+        {
+          "state": "inactive",
+          "name": "HostSwapThrashingActive",
+          "query": "((rate(node_vmstat_pswpin[1m]) + rate(node_vmstat_pswpout[1m])) * 4096 > 1.048576e+07) and ((node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) < 0.15)",
+          "duration": 180,
+          "keepFiringFor": 0,
+          "labels": {
+            "category": "thrashing",
+            "impact": "high_latency_spikes",
+            "severity": "warning",
+            "subsystem": "swap"
+          },
+          "annotations": {
+            "description": "Swap I/O throughput exceeds 10 MB/s while available RAM is under 15%. Active working sets are being evicted to disk.",
+            "diagnostic_command": "vmstat 1 5 && swapon --show",
+            "diagnostic_context": "Distinguishes cold static swap from dynamic latency-inducing swap churn.",
+            "runbook_url": "docs/troubleshooting/swap-thrashing.md",
+            "summary": "Active swap thrashing detected on {{ $labels.instance }}"
+          },
+          "alerts": [],
+          "health": "ok",
+          "evaluationTime": 0.001158037,
+          "lastEvaluation": "2026-11-03T09:20:26.061511576Z",
+          "type": "alerting"
+        }
+      ],
+      "interval": 15,
+      "limit": 0,
+      "evaluationTime": 0.005169189,
+      "lastEvaluation": "2026-11-03T09:20:26.057508667Z"
+    },
+    {
+      "name": "network_alerts",
+      "file": "/etc/prometheus/alerts/infrastructure_alerts.yml",
+      "rules": [
+        {
+          "state": "inactive",
+          "name": "HostNetworkDropsHigh",
+          "query": "sum by (instance, device) (rate(node_network_receive_drop_total{device!~\"lo|docker.*|veth.*\"}[1m]) + rate(node_network_transmit_drop_total{device!~\"lo|docker.*|veth.*\"}[1m])) > 10",
+          "duration": 300,
+          "keepFiringFor": 0,
+          "labels": {
+            "category": "degradation",
+            "impact": "packet_drop_retransmissions",
+            "severity": "warning",
+            "subsystem": "network"
+          },
+          "annotations": {
+            "description": "Interface {{ $labels.device }} is experiencing {{ $value | printf \"%.1f\" }} packet drops/s. Ring buffer overflow or kernel backlog saturation.",
+            "diagnostic_command": "ip -s link show {{ $labels.device }} && ethtool -S {{ $labels.device }} 2>/dev/null | grep -i drop",
+            "diagnostic_context": "Check NIC ring buffers and socket listen backlogs.",
+            "runbook_url": "docs/troubleshooting/network-errors.md",
+            "summary": "Elevated network packet drop rate on {{ $labels.device }} ({{ $value | printf \"%.1f\" }} drops/s)"
+          },
+          "alerts": [],
+          "health": "ok",
+          "evaluationTime": 0.002305099,
+          "lastEvaluation": "2026-11-03T09:20:20.844108252Z",
+          "type": "alerting"
+        },
+        {
+          "state": "inactive",
+          "name": "HostNetworkErrorsDetected",
+          "query": "sum by (instance, device) (rate(node_network_receive_errs_total{device!~\"lo|docker.*|veth.*\"}[1m]) + rate(node_network_transmit_errs_total{device!~\"lo|docker.*|veth.*\"}[1m])) > 0",
+          "duration": 120,
+          "keepFiringFor": 0,
+          "labels": {
+            "category": "degradation",
+            "impact": "data_corruption_retransmissions",
+            "severity": "critical",
+            "subsystem": "network"
+          },
+          "annotations": {
+            "description": "Interface {{ $labels.device }} is reporting active packet errors (CRC checksum failures, frame align, or FIFO overruns).",
+            "diagnostic_command": "ip -s link show {{ $labels.device }}",
+            "diagnostic_context": "Physical layer degradation, faulty cable, or driver firmware issue.",
+            "runbook_url": "docs/troubleshooting/network-errors.md",
+            "summary": "Network interface packet errors on {{ $labels.device }}"
+          },
+          "alerts": [],
+          "health": "ok",
+          "evaluationTime": 0.00158957,
+          "lastEvaluation": "2026-11-03T09:20:20.846433046Z",
+          "type": "alerting"
+        }
+      ],
+      "interval": 15,
+      "limit": 0,
+      "evaluationTime": 0.003972822,
+      "lastEvaluation": "2026-11-03T09:20:20.844063729Z"
+    },
+    {
+      "name": "service_alerts",
+      "file": "/etc/prometheus/alerts/infrastructure_alerts.yml",
+      "rules": [
+        {
+          "state": "inactive",
+          "name": "HostCriticalServiceDown",
+          "query": "node_systemd_unit_state{name=~\"ssh.service|docker.service|systemd-journald.service|prometheus.service|prometheus-node-exporter.service\",state=\"active\"} == 0",
+          "duration": 60,
+          "keepFiringFor": 0,
+          "labels": {
+            "category": "availability",
+            "impact": "critical_service_outage",
+            "severity": "critical",
+            "subsystem": "systemd"
+          },
+          "annotations": {
+            "description": "Essential host service {{ $labels.name }} is not in 'active' state on {{ $labels.instance }}. Immediate operator triage required.",
+            "diagnostic_command": "systemctl status {{ $labels.name }} && journalctl -u {{ $labels.name }} -n 25 --no-pager",
+            "diagnostic_context": "Verify service unit journal for crash or exit status.",
+            "runbook_url": "docs/troubleshooting/systemd-unit.md",
+            "summary": "Critical systemd service down: {{ $labels.name }}"
+          },
+          "alerts": [],
+          "health": "ok",
+          "evaluationTime": 0.002775176,
+          "lastEvaluation": "2026-11-03T09:20:30.858296021Z",
+          "type": "alerting"
+        }
+      ],
+      "interval": 15,
+      "limit": 0,
+      "evaluationTime": 0.002836738,
+      "lastEvaluation": "2026-11-03T09:20:30.858248115Z"
+    },
+    {
+      "name": "storage_alerts",
+      "file": "/etc/prometheus/alerts/infrastructure_alerts.yml",
+      "rules": [
+        {
+          "state": "inactive",
+          "name": "HostFilesystemSpaceWarning",
+          "query": "(node_filesystem_avail_bytes{fstype=~\"ext4|xfs\"} / node_filesystem_size_bytes{fstype=~\"ext4|xfs\"}) < 0.15",
+          "duration": 600,
+          "keepFiringFor": 0,
+          "labels": {
+            "category": "capacity",
+            "impact": "capacity_depletion",
+            "severity": "warning",
+            "subsystem": "storage"
+          },
+          "annotations": {
+            "description": "Filesystem {{ $labels.mountpoint }} on {{ $labels.device }} has {{ $value | humanizePercentage }} available space remaining for unprivileged processes.",
+            "diagnostic_command": "df -hT {{ $labels.mountpoint }}",
+            "diagnostic_context": "Excludes read-only snaps and virtual filesystems. Threshold <15% for 10m.",
+            "runbook_url": "docs/troubleshooting/disk-capacity.md",
+            "summary": "Low filesystem space on {{ $labels.mountpoint }} ({{ $value | humanizePercentage }})"
+          },
+          "alerts": [],
+          "health": "ok",
+          "evaluationTime": 0.001831257,
+          "lastEvaluation": "2026-11-03T09:20:33.379109859Z",
+          "type": "alerting"
+        },
+        {
+          "state": "inactive",
+          "name": "HostFilesystemSpaceCritical",
+          "query": "(node_filesystem_avail_bytes{fstype=~\"ext4|xfs\"} / node_filesystem_size_bytes{fstype=~\"ext4|xfs\"}) < 0.05",
+          "duration": 180,
+          "keepFiringFor": 0,
+          "labels": {
+            "category": "capacity",
+            "impact": "enospc_write_failures",
+            "severity": "critical",
+            "subsystem": "storage"
+          },
+          "annotations": {
+            "description": "Filesystem {{ $labels.mountpoint }} has only {{ $value | humanizePercentage }} capacity remaining. Imminent ENOSPC write failures for applications and logging.",
+            "diagnostic_command": "du -xh --max-depth=2 {{ $labels.mountpoint }} | sort -hr | head -n 10",
+            "diagnostic_context": "Check for unlinked open files (lsof +L1) or rapidly growing log directories.",
+            "runbook_url": "docs/troubleshooting/disk-capacity.md",
+            "summary": "Critical filesystem space on {{ $labels.mountpoint }} ({{ $value | humanizePercentage }})"
+          },
+          "alerts": [],
+          "health": "ok",
+          "evaluationTime": 0.000797376,
+          "lastEvaluation": "2026-11-03T09:20:33.380961773Z",
+          "type": "alerting"
+        },
+        {
+          "state": "inactive",
+          "name": "HostFilesystemFillRatePredict",
+          "query": "predict_linear(node_filesystem_avail_bytes{fstype=~\"ext4|xfs\"}[1h], 4 * 3600) < 0 and (node_filesystem_avail_bytes{fstype=~\"ext4|xfs\"} / node_filesystem_size_bytes{fstype=~\"ext4|xfs\"}) < 0.25",
+          "duration": 900,
+          "keepFiringFor": 0,
+          "labels": {
+            "category": "trend",
+            "impact": "predictive_exhaustion",
+            "severity": "warning",
+            "subsystem": "storage"
+          },
+          "annotations": {
+            "description": "Based on 1-hour linear regression, filesystem {{ $labels.mountpoint }} will fill completely in under 4 hours at the current consumption rate.",
+            "diagnostic_command": "journalctl --disk-usage && find {{ $labels.mountpoint }} -xdev -type f -mmin -60 -size +50M",
+            "diagnostic_context": "Proactive trend alert. Catch rogue logs or run-away dumps before capacity breach.",
+            "runbook_url": "docs/troubleshooting/disk-capacity.md",
+            "summary": "Filesystem {{ $labels.mountpoint }} projected to exhaust within 4 hours"
+          },
+          "alerts": [],
+          "health": "ok",
+          "evaluationTime": 0.00138445,
+          "lastEvaluation": "2026-11-03T09:20:33.381772541Z",
+          "type": "alerting"
+        },
+        {
+          "state": "inactive",
+          "name": "HostInodeExhaustionWarning",
+          "query": "(node_filesystem_files_free{fstype=~\"ext4|xfs\"} / node_filesystem_files{fstype=~\"ext4|xfs\"}) < 0.1",
+          "duration": 600,
+          "keepFiringFor": 0,
+          "labels": {
+            "category": "inodes",
+            "impact": "inode_table_saturation",
+            "severity": "warning",
+            "subsystem": "storage"
+          },
+          "annotations": {
+            "description": "Filesystem {{ $labels.mountpoint }} has only {{ $value | humanizePercentage }} free inodes remaining. High density of small files, temporary files, or un-rotated logs.",
+            "diagnostic_command": "df -i {{ $labels.mountpoint }}",
+            "diagnostic_context": "File creation fails when inodes exhaust even if storage byte capacity remains.",
+            "runbook_url": "docs/troubleshooting/disk-inodes.md",
+            "summary": "High inode consumption on {{ $labels.mountpoint }} ({{ $value | humanizePercentage }})"
+          },
+          "alerts": [],
+          "health": "ok",
+          "evaluationTime": 0.001958893,
+          "lastEvaluation": "2026-11-03T09:20:33.383170855Z",
+          "type": "alerting"
+        },
+        {
+          "state": "inactive",
+          "name": "HostInodeExhaustionCritical",
+          "query": "(node_filesystem_files_free{fstype=~\"ext4|xfs\"} / node_filesystem_files{fstype=~\"ext4|xfs\"}) < 0.02",
+          "duration": 180,
+          "keepFiringFor": 0,
+          "labels": {
+            "category": "inodes",
+            "impact": "file_creation_failure",
+            "severity": "critical",
+            "subsystem": "storage"
+          },
+          "annotations": {
+            "description": "Filesystem {{ $labels.mountpoint }} has only {{ $value | humanizePercentage }} free inodes left. New file creation will fail immediately with ENOSPC.",
+            "diagnostic_command": "find {{ $labels.mountpoint }} -xdev -type d -exec echo -n '{}: ' \\; -exec ls -1 {} \\; | wc -l",
+            "diagnostic_context": "Inspect directories containing excessive file counts.",
+            "runbook_url": "docs/troubleshooting/disk-inodes.md",
+            "summary": "Critical inode exhaustion on {{ $labels.mountpoint }} ({{ $value | humanizePercentage }})"
+          },
+          "alerts": [],
+          "health": "ok",
+          "evaluationTime": 0.00052045,
+          "lastEvaluation": "2026-11-03T09:20:33.385144937Z",
+          "type": "alerting"
+        }
+      ],
+      "interval": 15,
+      "limit": 0,
+      "evaluationTime": 0.006596231,
+      "lastEvaluation": "2026-11-03T09:20:33.379078322Z"
+    },
+    {
+      "name": "compute_supplementary_alerts",
+      "file": "/etc/prometheus/rules/alert_rules.yml",
+      "rules": [
+        {
+          "state": "inactive",
+          "name": "HostHighLoadAverage",
+          "query": "node_load5 / count without (cpu, mode) (node_cpu_seconds_total{mode=\"idle\"}) > 1.5",
+          "duration": 600,
+          "keepFiringFor": 0,
+          "labels": {
+            "category": "load",
+            "severity": "warning",
+            "subsystem": "cpu"
+          },
+          "annotations": {
+            "description": "5-minute load average normalized per core is {{ $value | printf \"%.2f\" }} (>1.5x total logical core capacity).",
+            "runbook_url": "docs/troubleshooting/cpu-load.md",
+            "summary": "System load average exceeds core capacity on {{ $labels.instance }}"
+          },
+          "alerts": [],
+          "health": "ok",
+          "evaluationTime": 0.002019254,
+          "lastEvaluation": "2026-11-03T09:20:21.890406464Z",
+          "type": "alerting"
+        }
+      ],
+      "interval": 15,
+      "limit": 0,
+      "evaluationTime": 0.002089599,
+      "lastEvaluation": "2026-11-03T09:20:21.890350663Z"
+    },
+    {
+      "name": "memory_supplementary_alerts",
+      "file": "/etc/prometheus/rules/alert_rules.yml",
+      "rules": [
+        {
+          "state": "inactive",
+          "name": "HostOomKillDetected",
+          "query": "increase(node_vmstat_oom_kill[5m]) > 0",
+          "duration": 0,
+          "keepFiringFor": 0,
+          "labels": {
+            "category": "incident",
+            "severity": "critical",
+            "subsystem": "memory"
+          },
+          "annotations": {
+            "description": "Kernel OOM killer terminated one or more tasks within the last 5 minutes. Check journalctl -k.",
+            "runbook_url": "docs/troubleshooting/oom-incident.md",
+            "summary": "Kernel Out of Memory (OOM) killer invoked on {{ $labels.instance }}"
+          },
+          "alerts": [],
+          "health": "ok",
+          "evaluationTime": 0.000710856,
+          "lastEvaluation": "2026-11-03T09:20:29.781249338Z",
+          "type": "alerting"
+        }
+      ],
+      "interval": 15,
+      "limit": 0,
+      "evaluationTime": 0.000757415,
+      "lastEvaluation": "2026-11-03T09:20:29.781211409Z"
+    },
+    {
+      "name": "observability_health_alerts",
+      "file": "/etc/prometheus/rules/alert_rules.yml",
+      "rules": [
+        {
+          "state": "inactive",
+          "name": "TargetScrapeSlow",
+          "query": "scrape_duration_seconds > 5",
+          "duration": 300,
+          "keepFiringFor": 0,
+          "labels": {
+            "category": "performance",
+            "severity": "warning",
+            "subsystem": "observability"
+          },
+          "annotations": {
+            "description": "Scrape duration for {{ $labels.instance }} is {{ $value | printf \"%.2f\" }}s (>5s), approaching scrape timeout.",
+            "runbook_url": "docs/troubleshooting/slow-scrape.md",
+            "summary": "Slow metric scrape on target {{ $labels.job }} ({{ $labels.instance }})"
+          },
+          "alerts": [],
+          "health": "ok",
+          "evaluationTime": 0.001467874,
+          "lastEvaluation": "2026-11-03T09:20:24.931469198Z",
+          "type": "alerting"
+        },
+        {
+          "state": "inactive",
+          "name": "CustomAgentCollectorErrors",
+          "query": "linux_agent_collector_success == 0",
+          "duration": 180,
+          "keepFiringFor": 0,
+          "labels": {
+            "category": "exporter_health",
+            "severity": "warning",
+            "subsystem": "custom_agent"
+          },
+          "annotations": {
+            "description": "Collector '{{ $labels.collector }}' in Python monitoring agent failed during collection.",
+            "runbook_url": "docs/troubleshooting/custom-agent.md",
+            "summary": "Custom Python agent collector error: {{ $labels.collector }}"
+          },
+          "alerts": [],
+          "health": "ok",
+          "evaluationTime": 0.000619973,
+          "lastEvaluation": "2026-11-03T09:20:24.932955028Z",
+          "type": "alerting"
+        }
+      ],
+      "interval": 15,
+      "limit": 0,
+      "evaluationTime": 0.002158861,
+      "lastEvaluation": "2026-11-03T09:20:24.931426718Z"
+    },
+    {
+      "name": "storage_supplementary_alerts",
+      "file": "/etc/prometheus/rules/alert_rules.yml",
+      "rules": [
+        {
+          "state": "inactive",
+          "name": "HostFilesystemReadonly",
+          "query": "node_filesystem_readonly{fstype=~\"ext4|xfs\"} == 1",
+          "duration": 60,
+          "keepFiringFor": 0,
+          "labels": {
+            "category": "availability",
+            "severity": "critical",
+            "subsystem": "storage"
+          },
+          "annotations": {
+            "description": "Filesystem {{ $labels.mountpoint }} has remounted read-only due to kernel I/O errors or metadata inconsistency.",
+            "runbook_url": "docs/troubleshooting/disk-readonly.md",
+            "summary": "Filesystem {{ $labels.mountpoint }} mounted read-only"
+          },
+          "alerts": [],
+          "health": "ok",
+          "evaluationTime": 0.001316725,
+          "lastEvaluation": "2026-11-03T09:20:24.218460989Z",
+          "type": "alerting"
+        }
+      ],
+      "interval": 15,
+      "limit": 0,
+      "evaluationTime": 0.001451658,
+      "lastEvaluation": "2026-11-03T09:20:24.218414729Z"
+    },
+    {
+      "name": "custom_agent_rules",
+      "file": "/etc/prometheus/rules/recording_rules.yml",
+      "rules": [
+        {
+          "name": "instance:custom_cpu_utilization:ratio",
+          "query": "linux_cpu_utilization_ratio",
+          "labels": {
+            "collector": "custom_agent",
+            "subsystem": "cpu"
+          },
+          "health": "ok",
+          "evaluationTime": 0.00178301,
+          "lastEvaluation": "2026-11-03T09:20:23.660395839Z",
+          "type": "recording"
+        },
+        {
+          "name": "instance:custom_memory_utilization:ratio",
+          "query": "1 - (linux_memory_available_bytes / linux_memory_total_bytes)",
+          "labels": {
+            "collector": "custom_agent",
+            "subsystem": "memory"
+          },
+          "health": "ok",
+          "evaluationTime": 0.000927917,
+          "lastEvaluation": "2026-11-03T09:20:23.66220512Z",
+          "type": "recording"
+        },
+        {
+          "name": "instance:custom_swap_io_bytes:rate1m",
+          "query": "(rate(linux_swap_in_pages_total[1m]) + rate(linux_swap_out_pages_total[1m])) * 4096",
+          "labels": {
+            "collector": "custom_agent",
+            "subsystem": "swap"
+          },
+          "health": "ok",
+          "evaluationTime": 0.001117151,
+          "lastEvaluation": "2026-11-03T09:20:23.663158101Z",
+          "type": "recording"
+        },
+        {
+          "name": "instance:custom_disk_throughput_bytes:rate1m",
+          "query": "sum by (instance, device) (rate(linux_disk_read_bytes_total[1m]) + rate(linux_disk_written_bytes_total[1m]))",
+          "labels": {
+            "collector": "custom_agent",
+            "subsystem": "disk_io"
+          },
+          "health": "ok",
+          "evaluationTime": 0.001100938,
+          "lastEvaluation": "2026-11-03T09:20:23.664292682Z",
+          "type": "recording"
+        }
+      ],
+      "interval": 15,
+      "limit": 0,
+      "evaluationTime": 0.005059218,
+      "lastEvaluation": "2026-11-03T09:20:23.660346249Z"
+    },
+    {
+      "name": "node_rules_cpu",
+      "file": "/etc/prometheus/rules/recording_rules.yml",
+      "rules": [
+        {
+          "name": "instance:node_cpu_utilization:rate5m",
+          "query": "100 - (avg by (instance) (rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)",
+          "labels": {
+            "subsystem": "cpu"
+          },
+          "health": "ok",
+          "evaluationTime": 0.001821602,
+          "lastEvaluation": "2026-11-03T09:20:27.016063375Z",
+          "type": "recording"
+        },
+        {
+          "name": "instance:node_cpu_mode:rate5m",
+          "query": "sum by (instance, mode) (rate(node_cpu_seconds_total[5m]))",
+          "labels": {
+            "subsystem": "cpu"
+          },
+          "health": "ok",
+          "evaluationTime": 0.004834037,
+          "lastEvaluation": "2026-11-03T09:20:27.017907662Z",
+          "type": "recording"
+        },
+        {
+          "name": "instance:node_cpu_pressure:rate1m",
+          "query": "rate(node_pressure_cpu_waiting_seconds_total[1m]) * 100",
+          "labels": {
+            "subsystem": "cpu"
+          },
+          "health": "ok",
+          "evaluationTime": 0.000955938,
+          "lastEvaluation": "2026-11-03T09:20:27.022774661Z",
+          "type": "recording"
+        }
+      ],
+      "interval": 15,
+      "limit": 0,
+      "evaluationTime": 0.007725275,
+      "lastEvaluation": "2026-11-03T09:20:27.016020041Z"
+    },
+    {
+      "name": "node_rules_memory",
+      "file": "/etc/prometheus/rules/recording_rules.yml",
+      "rules": [
+        {
+          "name": "instance:node_memory_utilization:ratio",
+          "query": "1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)",
+          "labels": {
+            "subsystem": "memory"
+          },
+          "health": "ok",
+          "evaluationTime": 0.001955664,
+          "lastEvaluation": "2026-11-03T09:20:21.958354885Z",
+          "type": "recording"
+        },
+        {
+          "name": "instance:node_memory_used_bytes:bytes",
+          "query": "node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes",
+          "labels": {
+            "subsystem": "memory"
+          },
+          "health": "ok",
+          "evaluationTime": 0.0019211,
+          "lastEvaluation": "2026-11-03T09:20:21.960333062Z",
+          "type": "recording"
+        },
+        {
+          "name": "instance:node_swap_io_bytes:rate1m",
+          "query": "(rate(node_vmstat_pswpin[1m]) + rate(node_vmstat_pswpout[1m])) * 4096",
+          "labels": {
+            "subsystem": "swap"
+          },
+          "health": "ok",
+          "evaluationTime": 0.001087542,
+          "lastEvaluation": "2026-11-03T09:20:21.962290329Z",
+          "type": "recording"
+        },
+        {
+          "name": "instance:node_memory_pressure_waiting:rate1m",
+          "query": "rate(node_pressure_memory_waiting_seconds_total[1m]) * 100",
+          "labels": {
+            "subsystem": "memory"
+          },
+          "health": "ok",
+          "evaluationTime": 0.000549388,
+          "lastEvaluation": "2026-11-03T09:20:21.963400949Z",
+          "type": "recording"
+        },
+        {
+          "name": "instance:node_memory_pressure_stalled:rate1m",
+          "query": "rate(node_pressure_memory_stalled_seconds_total[1m]) * 100",
+          "labels": {
+            "subsystem": "memory"
+          },
+          "health": "ok",
+          "evaluationTime": 0.000498378,
+          "lastEvaluation": "2026-11-03T09:20:21.963964459Z",
+          "type": "recording"
+        }
+      ],
+      "interval": 15,
+      "limit": 0,
+      "evaluationTime": 0.00616875,
+      "lastEvaluation": "2026-11-03T09:20:21.958304859Z"
+    },
+    {
+      "name": "node_rules_network",
+      "file": "/etc/prometheus/rules/recording_rules.yml",
+      "rules": [
+        {
+          "name": "instance:node_network_receive_bytes:rate1m",
+          "query": "sum by (instance, device) (rate(node_network_receive_bytes_total{device!~\"lo|docker.*|veth.*\"}[1m]))",
+          "labels": {
+            "subsystem": "network"
+          },
+          "health": "ok",
+          "evaluationTime": 0.00120608,
+          "lastEvaluation": "2026-11-03T09:20:19.70815618Z",
+          "type": "recording"
+        },
+        {
+          "name": "instance:node_network_transmit_bytes:rate1m",
+          "query": "sum by (instance, device) (rate(node_network_transmit_bytes_total{device!~\"lo|docker.*|veth.*\"}[1m]))",
+          "labels": {
+            "subsystem": "network"
+          },
+          "health": "ok",
+          "evaluationTime": 0.000772207,
+          "lastEvaluation": "2026-11-03T09:20:19.709379041Z",
+          "type": "recording"
+        },
+        {
+          "name": "instance:node_network_packets_rx:rate1m",
+          "query": "sum by (instance, device) (rate(node_network_receive_packets_total{device!~\"lo|docker.*|veth.*\"}[1m]))",
+          "labels": {
+            "subsystem": "network"
+          },
+          "health": "ok",
+          "evaluationTime": 0.000785488,
+          "lastEvaluation": "2026-11-03T09:20:19.710164993Z",
+          "type": "recording"
+        },
+        {
+          "name": "instance:node_network_packets_tx:rate1m",
+          "query": "sum by (instance, device) (rate(node_network_transmit_packets_total{device!~\"lo|docker.*|veth.*\"}[1m]))",
+          "labels": {
+            "subsystem": "network"
+          },
+          "health": "ok",
+          "evaluationTime": 0.000386077,
+          "lastEvaluation": "2026-11-03T09:20:19.710964429Z",
+          "type": "recording"
+        },
+        {
+          "name": "instance:node_network_errors:rate1m",
+          "query": "sum by (instance, device) (rate(node_network_receive_errs_total{device!~\"lo|docker.*|veth.*\"}[1m]) + rate(node_network_transmit_errs_total{device!~\"lo|docker.*|veth.*\"}[1m]))",
+          "labels": {
+            "subsystem": "network"
+          },
+          "health": "ok",
+          "evaluationTime": 0.000971346,
+          "lastEvaluation": "2026-11-03T09:20:19.711356239Z",
+          "type": "recording"
+        },
+        {
+          "name": "instance:node_network_drops:rate1m",
+          "query": "sum by (instance, device) (rate(node_network_receive_drop_total{device!~\"lo|docker.*|veth.*\"}[1m]) + rate(node_network_transmit_drop_total{device!~\"lo|docker.*|veth.*\"}[1m]))",
+          "labels": {
+            "subsystem": "network"
+          },
+          "health": "ok",
+          "evaluationTime": 0.000739882,
+          "lastEvaluation": "2026-11-03T09:20:19.712337698Z",
+          "type": "recording"
+        }
+      ],
+      "interval": 15,
+      "limit": 0,
+      "evaluationTime": 0.004970975,
+      "lastEvaluation": "2026-11-03T09:20:19.708114302Z"
+    },
+    {
+      "name": "node_rules_storage",
+      "file": "/etc/prometheus/rules/recording_rules.yml",
+      "rules": [
+        {
+          "name": "instance:node_filesystem_utilization:ratio",
+          "query": "1 - (node_filesystem_avail_bytes{fstype=~\"ext4|xfs\"} / node_filesystem_size_bytes{fstype=~\"ext4|xfs\"})",
+          "labels": {
+            "subsystem": "storage"
+          },
+          "health": "ok",
+          "evaluationTime": 0.002426823,
+          "lastEvaluation": "2026-11-03T09:20:32.083253286Z",
+          "type": "recording"
+        },
+        {
+          "name": "instance:node_filesystem_inodes_utilization:ratio",
+          "query": "1 - (node_filesystem_files_free{fstype=~\"ext4|xfs\"} / node_filesystem_files{fstype=~\"ext4|xfs\"})",
+          "labels": {
+            "subsystem": "storage"
+          },
+          "health": "ok",
+          "evaluationTime": 0.006160781,
+          "lastEvaluation": "2026-11-03T09:20:32.085712262Z",
+          "type": "recording"
+        },
+        {
+          "name": "instance:node_disk_read_bytes:rate1m",
+          "query": "sum by (instance, device) (rate(node_disk_read_bytes_total{device=~\"nvme.*|sd.*|vd.*\"}[1m]))",
+          "labels": {
+            "subsystem": "disk_io"
+          },
+          "health": "ok",
+          "evaluationTime": 0.001025158,
+          "lastEvaluation": "2026-11-03T09:20:32.09191452Z",
+          "type": "recording"
+        },
+        {
+          "name": "instance:node_disk_written_bytes:rate1m",
+          "query": "sum by (instance, device) (rate(node_disk_written_bytes_total{device=~\"nvme.*|sd.*|vd.*\"}[1m]))",
+          "labels": {
+            "subsystem": "disk_io"
+          },
+          "health": "ok",
+          "evaluationTime": 0.000712631,
+          "lastEvaluation": "2026-11-03T09:20:32.092963172Z",
+          "type": "recording"
+        },
+        {
+          "name": "instance:node_disk_iops:rate1m",
+          "query": "sum by (instance, device) (rate(node_disk_reads_completed_total{device=~\"nvme.*|sd.*|vd.*\"}[1m]) + rate(node_disk_writes_completed_total{device=~\"nvme.*|sd.*|vd.*\"}[1m]))",
+          "labels": {
+            "subsystem": "disk_io"
+          },
+          "health": "ok",
+          "evaluationTime": 0.001532812,
+          "lastEvaluation": "2026-11-03T09:20:32.093687906Z",
+          "type": "recording"
+        },
+        {
+          "name": "instance:node_disk_read_latency_seconds:rate1m",
+          "query": "rate(node_disk_read_time_seconds_total{device=~\"nvme.*|sd.*|vd.*\"}[1m]) / clamp_min(rate(node_disk_reads_completed_total{device=~\"nvme.*|sd.*|vd.*\"}[1m]), 0.001)",
+          "labels": {
+            "subsystem": "disk_io"
+          },
+          "health": "ok",
+          "evaluationTime": 0.001251734,
+          "lastEvaluation": "2026-11-03T09:20:32.095237385Z",
+          "type": "recording"
+        },
+        {
+          "name": "instance:node_disk_write_latency_seconds:rate1m",
+          "query": "rate(node_disk_write_time_seconds_total{device=~\"nvme.*|sd.*|vd.*\"}[1m]) / clamp_min(rate(node_disk_writes_completed_total{device=~\"nvme.*|sd.*|vd.*\"}[1m]), 0.001)",
+          "labels": {
+            "subsystem": "disk_io"
+          },
+          "health": "ok",
+          "evaluationTime": 0.000756859,
+          "lastEvaluation": "2026-11-03T09:20:32.096503281Z",
+          "type": "recording"
+        }
+      ],
+      "interval": 15,
+      "limit": 0,
+      "evaluationTime": 0.014060218,
+      "lastEvaluation": "2026-11-03T09:20:32.08320749Z"
+    },
+    {
+      "name": "sre_burn_rate_alerts",
+      "file": "/etc/prometheus/rules/sre_rules.yml",
+      "rules": [
+        {
+          "state": "inactive",
+          "name": "HostTelemetryErrorBudgetBurnCritical",
+          "query": "(instance:node_exporter_burn_rate:1h > 14.4) and (instance:node_exporter_burn_rate:5m > 14.4)",
+          "duration": 120,
+          "keepFiringFor": 0,
+          "labels": {
+            "category": "availability",
+            "component": "node_exporter",
+            "severity": "critical",
+            "subsystem": "sre_burn_rate"
+          },
+          "annotations": {
+            "description": "Node Exporter error budget is burning at 14.4x over both 1h and 5m windows. 2% of monthly budget consumed in 1 hour. Entire budget exhausted in 50 hours.",
+            "runbook_url": "docs/sre/error-budget-policy.md",
+            "summary": "Critical Host Telemetry Error Budget Burn Rate (14.4x) on {{ $labels.instance }}"
+          },
+          "alerts": [],
+          "health": "ok",
+          "evaluationTime": 0.000608269,
+          "lastEvaluation": "2026-11-03T09:20:21.858281695Z",
+          "type": "alerting"
+        },
+        {
+          "state": "inactive",
+          "name": "HostTelemetryErrorBudgetBurnHigh",
+          "query": "(instance:node_exporter_burn_rate:6h > 6) and (instance:node_exporter_burn_rate:30m > 6)",
+          "duration": 300,
+          "keepFiringFor": 0,
+          "labels": {
+            "category": "availability",
+            "component": "node_exporter",
+            "severity": "critical",
+            "subsystem": "sre_burn_rate"
+          },
+          "annotations": {
+            "description": "Node Exporter error budget is burning at 6.0x over both 6h and 30m windows. 5% of monthly budget consumed in 6 hours. Entire budget exhausted in 5 days.",
+            "runbook_url": "docs/sre/error-budget-policy.md",
+            "summary": "High Host Telemetry Error Budget Burn Rate (6.0x) on {{ $labels.instance }}"
+          },
+          "alerts": [],
+          "health": "ok",
+          "evaluationTime": 0.000326013,
+          "lastEvaluation": "2026-11-03T09:20:21.858899208Z",
+          "type": "alerting"
+        },
+        {
+          "state": "inactive",
+          "name": "CustomAgentTelemetryErrorBudgetBurnCritical",
+          "query": "(instance:custom_agent_burn_rate:1h > 14.4) and (instance:custom_agent_burn_rate:5m > 14.4)",
+          "duration": 120,
+          "keepFiringFor": 0,
+          "labels": {
+            "category": "availability",
+            "component": "python_agent",
+            "severity": "critical",
+            "subsystem": "sre_burn_rate"
+          },
+          "annotations": {
+            "description": "Custom monitoring agent is burning error budget at 14.4x over 1h and 5m. Risk of complete custom telemetry blackout.",
+            "runbook_url": "docs/sre/error-budget-policy.md",
+            "summary": "Critical Python Agent Error Budget Burn Rate (14.4x) on {{ $labels.instance }}"
+          },
+          "alerts": [],
+          "health": "ok",
+          "evaluationTime": 0.00031672,
+          "lastEvaluation": "2026-11-03T09:20:21.859230979Z",
+          "type": "alerting"
+        },
+        {
+          "state": "inactive",
+          "name": "CustomAgentCollectorExecutionDegraded",
+          "query": "instance:custom_agent_collector_success:ratio1h < 0.999",
+          "duration": 300,
+          "keepFiringFor": 0,
+          "labels": {
+            "category": "correctness",
+            "component": "python_agent",
+            "severity": "warning",
+            "subsystem": "sre_sli"
+          },
+          "annotations": {
+            "description": "Internal collector success rate is {{ $value | printf \"%.4f\" }} over 1 hour. Collectors are failing to parse /proc or /sys.",
+            "runbook_url": "docs/sre/sli-slo-framework.md",
+            "summary": "Custom Agent collector success rate degraded (<99.9%) on {{ $labels.instance }}"
+          },
+          "alerts": [],
+          "health": "ok",
+          "evaluationTime": 0.000205925,
+          "lastEvaluation": "2026-11-03T09:20:21.859552818Z",
+          "type": "alerting"
+        },
+        {
+          "state": "inactive",
+          "name": "MonitoringPipelineRuleIterationsMissed",
+          "query": "increase(prometheus_rule_group_iterations_missed_total[5m]) > 0",
+          "duration": 180,
+          "keepFiringFor": 0,
+          "labels": {
+            "category": "pipeline_integrity",
+            "component": "prometheus_rule_engine",
+            "severity": "warning",
+            "subsystem": "sre_pipeline"
+          },
+          "annotations": {
+            "description": "Prometheus rule engine missed {{ $value }} scheduled evaluations in rule group {{ $labels.rule_group }}. Rule execution delay detected.",
+            "runbook_url": "docs/sre/sli-slo-framework.md",
+            "summary": "Prometheus rule group iterations missed on {{ $labels.rule_group }}"
+          },
+          "alerts": [],
+          "health": "ok",
+          "evaluationTime": 0.000562628,
+          "lastEvaluation": "2026-11-03T09:20:21.859762594Z",
+          "type": "alerting"
+        }
+      ],
+      "interval": 15,
+      "limit": 0,
+      "evaluationTime": 0.002083476,
+      "lastEvaluation": "2026-11-03T09:20:21.858246972Z"
+    },
+    {
+      "name": "sre_error_budget_rules",
+      "file": "/etc/prometheus/rules/sre_rules.yml",
+      "rules": [
+        {
+          "name": "instance:node_exporter_error_budget_remaining:percent30d",
+          "query": "clamp_min(100 - ((1 - avg_over_time(up{job=\"node\"}[30d])) / 0.005 * 100), 0)",
+          "labels": {
+            "component": "node_exporter",
+            "subsystem": "sre_budget"
+          },
+          "health": "ok",
+          "evaluationTime": 0.011641614,
+          "lastEvaluation": "2026-11-03T09:20:31.747196874Z",
+          "type": "recording"
+        },
+        {
+          "name": "instance:node_exporter_error_budget_consumed:percent30d",
+          "query": "clamp_min((1 - avg_over_time(up{job=\"node\"}[30d])) / 0.005 * 100, 0)",
+          "labels": {
+            "component": "node_exporter",
+            "subsystem": "sre_budget"
+          },
+          "health": "ok",
+          "evaluationTime": 0.008181881,
+          "lastEvaluation": "2026-11-03T09:20:31.75885662Z",
+          "type": "recording"
+        },
+        {
+          "name": "instance:node_exporter_burn_rate:5m",
+          "query": "(1 - avg_over_time(up{job=\"node\"}[5m])) / 0.005",
+          "labels": {
+            "component": "node_exporter",
+            "subsystem": "sre_burn_rate"
+          },
+          "health": "ok",
+          "evaluationTime": 0.000551982,
+          "lastEvaluation": "2026-11-03T09:20:31.767058778Z",
+          "type": "recording"
+        },
+        {
+          "name": "instance:node_exporter_burn_rate:30m",
+          "query": "(1 - avg_over_time(up{job=\"node\"}[30m])) / 0.005",
+          "labels": {
+            "component": "node_exporter",
+            "subsystem": "sre_burn_rate"
+          },
+          "health": "ok",
+          "evaluationTime": 0.00043776,
+          "lastEvaluation": "2026-11-03T09:20:31.767618456Z",
+          "type": "recording"
+        },
+        {
+          "name": "instance:node_exporter_burn_rate:1h",
+          "query": "(1 - avg_over_time(up{job=\"node\"}[1h])) / 0.005",
+          "labels": {
+            "component": "node_exporter",
+            "subsystem": "sre_burn_rate"
+          },
+          "health": "ok",
+          "evaluationTime": 0.000242447,
+          "lastEvaluation": "2026-11-03T09:20:31.768062489Z",
+          "type": "recording"
+        },
+        {
+          "name": "instance:node_exporter_burn_rate:6h",
+          "query": "(1 - avg_over_time(up{job=\"node\"}[6h])) / 0.005",
+          "labels": {
+            "component": "node_exporter",
+            "subsystem": "sre_burn_rate"
+          },
+          "health": "ok",
+          "evaluationTime": 0.000669095,
+          "lastEvaluation": "2026-11-03T09:20:31.76830995Z",
+          "type": "recording"
+        },
+        {
+          "name": "instance:custom_agent_burn_rate:5m",
+          "query": "(1 - avg_over_time(up{job=\"python-agent\"}[5m])) / 0.01",
+          "labels": {
+            "component": "python_agent",
+            "subsystem": "sre_burn_rate"
+          },
+          "health": "ok",
+          "evaluationTime": 0.000238764,
+          "lastEvaluation": "2026-11-03T09:20:31.768985471Z",
+          "type": "recording"
+        },
+        {
+          "name": "instance:custom_agent_burn_rate:1h",
+          "query": "(1 - avg_over_time(up{job=\"python-agent\"}[1h])) / 0.01",
+          "labels": {
+            "component": "python_agent",
+            "subsystem": "sre_burn_rate"
+          },
+          "health": "ok",
+          "evaluationTime": 0.000260012,
+          "lastEvaluation": "2026-11-03T09:20:31.769228895Z",
+          "type": "recording"
+        }
+      ],
+      "interval": 15,
+      "limit": 0,
+      "evaluationTime": 0.022343561,
+      "lastEvaluation": "2026-11-03T09:20:31.74715063Z"
+    },
+    {
+      "name": "sre_sli_recording_rules",
+      "file": "/etc/prometheus/rules/sre_rules.yml",
+      "rules": [
+        {
+          "name": "instance:node_exporter_availability:ratio5m",
+          "query": "avg_over_time(up{job=\"node\"}[5m])",
+          "labels": {
+            "component": "node_exporter",
+            "sli_type": "availability",
+            "subsystem": "sre_sli"
+          },
+          "health": "ok",
+          "evaluationTime": 0.011304385,
+          "lastEvaluation": "2026-11-03T09:20:27.748752854Z",
+          "type": "recording"
+        },
+        {
+          "name": "instance:node_exporter_availability:ratio1h",
+          "query": "avg_over_time(up{job=\"node\"}[1h])",
+          "labels": {
+            "component": "node_exporter",
+            "sli_type": "availability",
+            "subsystem": "sre_sli"
+          },
+          "health": "ok",
+          "evaluationTime": 0.00447156,
+          "lastEvaluation": "2026-11-03T09:20:27.760100979Z",
+          "type": "recording"
+        },
+        {
+          "name": "instance:node_exporter_availability:ratio30d",
+          "query": "avg_over_time(up{job=\"node\"}[30d])",
+          "labels": {
+            "component": "node_exporter",
+            "sli_type": "availability",
+            "subsystem": "sre_sli"
+          },
+          "health": "ok",
+          "evaluationTime": 0.01705459,
+          "lastEvaluation": "2026-11-03T09:20:27.764593391Z",
+          "type": "recording"
+        },
+        {
+          "name": "instance:custom_agent_availability:ratio5m",
+          "query": "avg_over_time(up{job=\"python-agent\"}[5m])",
+          "labels": {
+            "component": "python_agent",
+            "sli_type": "availability",
+            "subsystem": "sre_sli"
+          },
+          "health": "ok",
+          "evaluationTime": 0.00226097,
+          "lastEvaluation": "2026-11-03T09:20:27.781693869Z",
+          "type": "recording"
+        },
+        {
+          "name": "instance:custom_agent_availability:ratio1h",
+          "query": "avg_over_time(up{job=\"python-agent\"}[1h])",
+          "labels": {
+            "component": "python_agent",
+            "sli_type": "availability",
+            "subsystem": "sre_sli"
+          },
+          "health": "ok",
+          "evaluationTime": 0.001717903,
+          "lastEvaluation": "2026-11-03T09:20:27.783985422Z",
+          "type": "recording"
+        },
+        {
+          "name": "instance:custom_agent_availability:ratio30d",
+          "query": "avg_over_time(up{job=\"python-agent\"}[30d])",
+          "labels": {
+            "component": "python_agent",
+            "sli_type": "availability",
+            "subsystem": "sre_sli"
+          },
+          "health": "ok",
+          "evaluationTime": 0.011112286,
+          "lastEvaluation": "2026-11-03T09:20:27.785722359Z",
+          "type": "recording"
+        },
+        {
+          "name": "instance:custom_agent_collector_success:ratio1h",
+          "query": "avg_over_time(linux_agent_collector_success[1h])",
+          "labels": {
+            "component": "python_agent",
+            "sli_type": "collector_success",
+            "subsystem": "sre_sli"
+          },
+          "health": "ok",
+          "evaluationTime": 0.001706068,
+          "lastEvaluation": "2026-11-03T09:20:27.796874547Z",
+          "type": "recording"
+        },
+        {
+          "name": "instance:node_scrape_latency_success:ratio1h",
+          "query": "sum_over_time((scrape_duration_seconds{job=\"node\"} <= bool 1)[1h:15s]) / count_over_time(scrape_duration_seconds{job=\"node\"}[1h])",
+          "labels": {
+            "component": "node_exporter",
+            "sli_type": "latency",
+            "subsystem": "sre_sli"
+          },
+          "health": "ok",
+          "evaluationTime": 0.001304303,
+          "lastEvaluation": "2026-11-03T09:20:27.798636109Z",
+          "type": "recording"
+        }
+      ],
+      "interval": 15,
+      "limit": 0,
+      "evaluationTime": 0.051254052,
+      "lastEvaluation": "2026-11-03T09:20:27.748696369Z"
+    }
+  ],
+  "promql_results": {
+    "cpu_usage_node": [
+      {
+        "metric": {
+          "instance": "rubi"
+        },
+        "value": [
+          1793697634.462,
+          "57.64347252779822"
+        ]
+      }
+    ],
+    "cpu_usage_agent": [],
+    "memory_used_bytes": [
+      {
+        "metric": {
+          "collector_type": "node_exporter",
+          "instance": "rubi",
+          "job": "node",
+          "role": "host_telemetry"
+        },
+        "value": [
+          1793697634.475,
+          "11573915648"
+        ]
+      }
+    ],
+    "memory_total_bytes": [
+      {
+        "metric": {
+          "__name__": "node_memory_MemTotal_bytes",
+          "collector_type": "node_exporter",
+          "instance": "rubi",
+          "job": "node",
+          "role": "host_telemetry"
+        },
+        "value": [
+          1793697634.482,
+          "16453816320"
+        ]
+      }
+    ],
+    "memory_percent": [
+      {
+        "metric": {
+          "collector_type": "node_exporter",
+          "instance": "rubi",
+          "job": "node",
+          "role": "host_telemetry"
+        },
+        "value": [
+          1793697634.488,
+          "70.34183087319161"
+        ]
+      }
+    ],
+    "load1": [
+      {
+        "metric": {
+          "__name__": "node_load1",
+          "collector_type": "node_exporter",
+          "instance": "rubi",
+          "job": "node",
+          "role": "host_telemetry"
+        },
+        "value": [
+          1793697634.493,
+          "13.01"
+        ]
+      }
+    ],
+    "load5": [
+      {
+        "metric": {
+          "__name__": "node_load5",
+          "collector_type": "node_exporter",
+          "instance": "rubi",
+          "job": "node",
+          "role": "host_telemetry"
+        },
+        "value": [
+          1793697634.499,
+          "13.11"
+        ]
+      }
+    ],
+    "disk_used_ratio": [
+      {
+        "metric": {
+          "collector_type": "node_exporter",
+          "device": "/dev/nvme0n1p2",
+          "fstype": "ext4",
+          "instance": "rubi",
+          "job": "node",
+          "mountpoint": "/",
+          "role": "host_telemetry"
+        },
+        "value": [
+          1793697634.506,
+          "0.28355749265554286"
+        ]
+      }
+    ],
+    "network_rx_rate": [
+      {
+        "metric": {},
+        "value": [
+          1793697634.514,
+          "49504.54474742761"
+        ]
+      }
+    ],
+    "network_tx_rate": [
+      {
+        "metric": {},
+        "value": [
+          1793697634.525,
+          "119981.24319399073"
+        ]
+      }
+    ],
+    "systemd_units_active": [
+      {
+        "metric": {
+          "__name__": "node_systemd_units",
+          "collector_type": "node_exporter",
+          "instance": "rubi",
+          "job": "node",
+          "role": "host_telemetry",
+          "state": "active"
+        },
+        "value": [
+          1793697634.537,
+          "523"
+        ]
+      }
+    ],
+    "sli_node_avail_5m": [
+      {
+        "metric": {
+          "__name__": "instance:node_exporter_availability:ratio5m",
+          "collector_type": "node_exporter",
+          "component": "node_exporter",
+          "instance": "rubi",
+          "job": "node",
+          "role": "host_telemetry",
+          "sli_type": "availability",
+          "subsystem": "sre_sli"
+        },
+        "value": [
+          1793697634.548,
+          "1"
+        ]
+      }
+    ],
+    "sli_agent_avail_5m": [
+      {
+        "metric": {
+          "__name__": "instance:custom_agent_availability:ratio5m",
+          "collector_type": "python_agent",
+          "component": "python_agent",
+          "instance": "rubi",
+          "job": "python-agent",
+          "role": "custom_telemetry",
+          "sli_type": "availability",
+          "subsystem": "sre_sli"
+        },
+        "value": [
+          1793697634.559,
+          "1"
+        ]
+      }
+    ],
+    "sli_collector_success_1h": [
+      {
+        "metric": {
+          "__name__": "instance:custom_agent_collector_success:ratio1h",
+          "collector": "cpu",
+          "collector_type": "python_agent",
+          "component": "python_agent",
+          "instance": "rubi",
+          "job": "python-agent",
+          "role": "custom_telemetry",
+          "sli_type": "collector_success",
+          "subsystem": "sre_sli"
+        },
+        "value": [
+          1793697634.567,
+          "1"
+        ]
+      },
+      {
+        "metric": {
+          "__name__": "instance:custom_agent_collector_success:ratio1h",
+          "collector": "memory",
+          "collector_type": "python_agent",
+          "component": "python_agent",
+          "instance": "rubi",
+          "job": "python-agent",
+          "role": "custom_telemetry",
+          "sli_type": "collector_success",
+          "subsystem": "sre_sli"
+        },
+        "value": [
+          1793697634.567,
+          "1"
+        ]
+      },
+      {
+        "metric": {
+          "__name__": "instance:custom_agent_collector_success:ratio1h",
+          "collector": "swap",
+          "collector_type": "python_agent",
+          "component": "python_agent",
+          "instance": "rubi",
+          "job": "python-agent",
+          "role": "custom_telemetry",
+          "sli_type": "collector_success",
+          "subsystem": "sre_sli"
+        },
+        "value": [
+          1793697634.567,
+          "1"
+        ]
+      },
+      {
+        "metric": {
+          "__name__": "instance:custom_agent_collector_success:ratio1h",
+          "collector": "filesystem",
+          "collector_type": "python_agent",
+          "component": "python_agent",
+          "instance": "rubi",
+          "job": "python-agent",
+          "role": "custom_telemetry",
+          "sli_type": "collector_success",
+          "subsystem": "sre_sli"
+        },
+        "value": [
+          1793697634.567,
+          "1"
+        ]
+      },
+      {
+        "metric": {
+          "__name__": "instance:custom_agent_collector_success:ratio1h",
+          "collector": "inode",
+          "collector_type": "python_agent",
+          "component": "python_agent",
+          "instance": "rubi",
+          "job": "python-agent",
+          "role": "custom_telemetry",
+          "sli_type": "collector_success",
+          "subsystem": "sre_sli"
+        },
+        "value": [
+          1793697634.567,
+          "1"
+        ]
+      },
+      {
+        "metric": {
+          "__name__": "instance:custom_agent_collector_success:ratio1h",
+          "collector": "disk_io",
+          "collector_type": "python_agent",
+          "component": "python_agent",
+          "instance": "rubi",
+          "job": "python-agent",
+          "role": "custom_telemetry",
+          "sli_type": "collector_success",
+          "subsystem": "sre_sli"
+        },
+        "value": [
+          1793697634.567,
+          "1"
+        ]
+      },
+      {
+        "metric": {
+          "__name__": "instance:custom_agent_collector_success:ratio1h",
+          "collector": "network",
+          "collector_type": "python_agent",
+          "component": "python_agent",
+          "instance": "rubi",
+          "job": "python-agent",
+          "role": "custom_telemetry",
+          "sli_type": "collector_success",
+          "subsystem": "sre_sli"
+        },
+        "value": [
+          1793697634.567,
+          "1"
+        ]
+      },
+      {
+        "metric": {
+          "__name__": "instance:custom_agent_collector_success:ratio1h",
+          "collector": "process",
+          "collector_type": "python_agent",
+          "component": "python_agent",
+          "instance": "rubi",
+          "job": "python-agent",
+          "role": "custom_telemetry",
+          "sli_type": "collector_success",
+          "subsystem": "sre_sli"
+        },
+        "value": [
+          1793697634.567,
+          "1"
+        ]
+      },
+      {
+        "metric": {
+          "__name__": "instance:custom_agent_collector_success:ratio1h",
+          "collector": "systemd",
+          "collector_type": "python_agent",
+          "component": "python_agent",
+          "instance": "rubi",
+          "job": "python-agent",
+          "role": "custom_telemetry",
+          "sli_type": "collector_success",
+          "subsystem": "sre_sli"
+        },
+        "value": [
+          1793697634.567,
+          "1"
+        ]
+      }
+    ],
+    "burn_rate_node_5m": [
+      {
+        "metric": {
+          "__name__": "instance:node_exporter_burn_rate:5m",
+          "collector_type": "node_exporter",
+          "component": "node_exporter",
+          "instance": "rubi",
+          "job": "node",
+          "role": "host_telemetry",
+          "subsystem": "sre_burn_rate"
+        },
+        "value": [
+          1793697634.579,
+          "0"
+        ]
+      }
+    ],
+    "burn_rate_agent_5m": [
+      {
+        "metric": {
+          "__name__": "instance:custom_agent_burn_rate:5m",
+          "collector_type": "python_agent",
+          "component": "python_agent",
+          "instance": "rubi",
+          "job": "python-agent",
+          "role": "custom_telemetry",
+          "subsystem": "sre_burn_rate"
+        },
+        "value": [
+          1793697634.594,
+          "0"
+        ]
+      }
+    ]
+  },
+  "dashboards_error": "HTTP Error 401: Unauthorized"
+}

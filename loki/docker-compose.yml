@@ -1,0 +1,83 @@
+# ==============================================================================
+# Docker Compose: Centralized Logging Stack (Loki & Alloy)
+# Project: Linux System Monitoring & Reliability Lab
+# Role: Agent 8 (Senior Observability Engineer - Centralized Logging)
+# Principle: Strict loopback isolation (127.0.0.1), direct host journald access
+# ==============================================================================
+
+services:
+  loki:
+    image: grafana/loki:3.0.0
+    container_name: lab-loki
+    restart: unless-stopped
+    ports:
+      # Isolated loopback port mapping: Host 3100 -> Container 3100
+      # Bound strictly to 127.0.0.1 to prevent unauthorized external network access
+      - "127.0.0.1:3100:3100"
+    volumes:
+      - ./loki-config.yaml:/etc/loki/local-config.yaml:ro
+      - ./rules:/loki/rules:ro
+      - loki_data:/loki
+    command:
+      - -config.file=/etc/loki/local-config.yaml
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:3100/ready || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+    networks:
+      - default
+      - prometheus_net
+
+  alloy:
+    image: grafana/alloy:v1.0.0
+    container_name: lab-alloy
+    restart: unless-stopped
+    # Process runs with primary UID 0 and primary GID 999 (root:systemd-journal)
+    user: "0:999"
+    ports:
+      # Isolated loopback port mapping: Host 12345 -> Container 12345 (Alloy UI & API)
+      - "127.0.0.1:12345:12345"
+    volumes:
+      - ../alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - /var/log/journal:/var/log/journal:ro
+      - /run/log/journal:/run/log/journal:ro
+      - /etc/machine-id:/etc/machine-id:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ../agent:/var/log/agent:ro
+      - alloy_data:/data-alloy
+    command:
+      - run
+      - /etc/alloy/config.alloy
+      - --server.http.listen-addr=0.0.0.0:12345
+      - --storage.path=/data-alloy
+    depends_on:
+      loki:
+        condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:12345/-/healthy || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    networks:
+      - default
+      - prometheus_net
+
+volumes:
+  loki_data:
+    name: lab_loki_data
+  alloy_data:
+    name: lab_alloy_data
+
+networks:
+  default:
+    name: lab-logging-network
+  prometheus_net:
+    name: prometheus_default
+    external: true

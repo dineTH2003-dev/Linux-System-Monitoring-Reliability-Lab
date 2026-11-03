@@ -1,9 +1,7 @@
-# Operational Runbook: Backup & Disaster Recovery
+# Backup & Disaster Recovery Runbook
 
 **Project:** Linux System Monitoring & Reliability Lab  
-**Runbook ID:** RB-OPS-01 — Backup & Recovery Procedures  
-**Severity:** P1 / SRE Operational Standard  
-**Target Architecture:** Docker Named Volumes & Monorepo Configuration  
+**Scope:** Docker Named Volume Backups, Manifest Verification & Disaster Recovery Procedures  
 
 ---
 

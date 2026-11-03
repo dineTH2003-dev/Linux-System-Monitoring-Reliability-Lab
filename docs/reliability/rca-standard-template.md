@@ -1,8 +1,7 @@
-# Standard SRE Root-Cause Analysis (RCA) & Incident Report Specification
+# Standard Root-Cause Analysis (RCA) & Incident Report Template
 
 **Project:** Linux System Monitoring & Reliability Lab  
-**Specification:** Standard Postmortem & RCA Framework  
-**Author:** Senior Site Reliability Engineer (Agent 10)  
+**Scope:** Blameless Post-Mortem Standard & Incident Timeline Template  
 
 ---
 

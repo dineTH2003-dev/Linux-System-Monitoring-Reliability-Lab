@@ -1,10 +1,7 @@
 # SRE Operational Policy: Error Budget Governance & Escalation
 
 **Project:** Linux System Monitoring & Reliability Lab  
-**Document Ref:** SRE-POL-002  
-**Author:** Senior Site Reliability Engineer (Agent 9 — SLI/SLO Specialist)  
-**Host Target:** Ubuntu 24.04 LTS (`rubi`, Linux Kernel `7.0.0-38-generic`)  
-**Status:** Approved & Enforced  
+**Scope:** Multi-Window Burn Rates, Consequence Thresholds & Escalation Policies  
 
 ---
 
@@ -189,10 +186,10 @@ In critical circumstances, an exception to the Feature Moratorium may be request
 - **Critical Data Integrity Bug**: Correcting a severe kernel or filesystem bug causing storage corruption.
 - **Observability Restoral**: Deploying code specifically engineered to fix a broken monitoring collector.
 
-### Approval Chain
-An Emergency Waiver requires documented sign-off from:
-1. **The Senior Site Reliability Engineer** (Agent 9).
-2. **The Lead Systems Architect**.
+### Review & Verification
+An Emergency Waiver requires documented technical review:
+1. Technical justification describing the specific failure or patch.
+2. Verified rollback procedure in case of regression.
 
 The waiver document must state:
 - The exact patch commit SHA.

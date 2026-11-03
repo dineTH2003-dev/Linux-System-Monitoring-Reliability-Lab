@@ -1,9 +1,7 @@
-# Consolidated Master System Architecture
+# System Architecture
 
 **Project:** Linux System Monitoring & Reliability Lab  
-**Author:** Principal SRE Architect & Technical Integration Lead  
-**Document Status:** Approved Master Architecture Specification  
-**Date:** October 2026  
+**Scope:** Host Metrics, Container Observability, Centralized Logging & Automated Remediation  
 
 ---
 

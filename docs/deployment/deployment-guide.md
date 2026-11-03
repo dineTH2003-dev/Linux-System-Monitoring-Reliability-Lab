@@ -1,9 +1,7 @@
-# Production Deployment & Operations Guide
+# Deployment & Operations Guide
 
 **Project:** Linux System Monitoring & Reliability Lab  
-**Document Ref:** DEP-01 — Deployment Architecture & Operations Manual  
-**Author:** Agent 11 (Infrastructure Security & Deployment Engineer)  
-**Target Environment:** Local Ubuntu 24.04 LTS (`rubi`, Linux Kernel `7.0.0-38-generic`, Intel Core i7-1355U)  
+**Scope:** Prerequisites, Preflight Verification, Container Orchestration & Health Verification  
 
 ---
 
@@ -61,7 +59,7 @@ The **Linux System Monitoring & Reliability Lab** deployment architecture is eng
 ### Step 1: Pre-Flight Verification
 Run the automated preflight checker to validate Docker status, permissions, disk capacity, and port availability:
 ```bash
-cd /home/dineth/dev/Linux-System-Monitoring-Reliability-Lab
+cd /path/to/Linux-System-Monitoring-Reliability-Lab
 ./deployment/deploy.sh preflight
 ```
 *Expected Output:*

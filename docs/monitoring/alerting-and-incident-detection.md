@@ -1,10 +1,7 @@
-# SRE Alerting Architecture & Incident Detection Manual
+# Alerting Architecture & Incident Detection
 
 **Project:** Linux System Monitoring & Reliability Lab  
-**Phase:** 5.1 — Alert Engineering, Alertmanager Routing & Blackbox Monitoring  
-**Role:** Senior Site Reliability Engineer (Agent 7 — Incident Detection & Alert Engineering)  
-**Target Environment:** Local Ubuntu 24.04 LTS (`rubi`, Linux Kernel `7.0.0-38-generic`, Intel Core i7-1355U)  
-**Status:** Production-Grade / Empirically Validated  
+**Scope:** Prometheus Alert Rules, Alertmanager Routing, Inhibition Trees & Blackbox Synthetic Probing  
 
 ---
 
