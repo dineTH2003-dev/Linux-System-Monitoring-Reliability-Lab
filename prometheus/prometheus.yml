@@ -39,6 +39,11 @@ scrape_configs:
           instance: 'rubi'
           collector_type: 'node_exporter'
           role: 'host_telemetry'
+    metric_relabel_configs:
+      # Cardinality optimization: drop redundant systemd states never queried by alerts or dashboards
+      - source_labels: [__name__, state]
+        regex: 'node_systemd_unit_state;(inactive|activating|deactivating)'
+        action: drop
 
   # 2. Custom Python Monitoring Agent running on Ubuntu host
   # Exposes custom psutil/kernel metrics on port 9101
@@ -56,7 +61,7 @@ scrape_configs:
   # 3. Prometheus Server Self-Monitoring
   # Scrapes Prometheus internal time-series and query metrics
   - job_name: 'prometheus'
-    scrape_interval: 15s
+    scrape_interval: 30s
     scrape_timeout: 10s
     static_configs:
       - targets: ['localhost:9090']
@@ -64,10 +69,15 @@ scrape_configs:
           instance: 'lab-prometheus'
           collector_type: 'prometheus_internal'
           role: 'monitoring_core'
+    metric_relabel_configs:
+      # Cardinality optimization: drop unused internal histogram buckets
+      - source_labels: [__name__]
+        regex: 'prometheus_(http|engine|tsdb|grpc|net)_.*_bucket'
+        action: drop
 
   # 4. Blackbox Exporter: Synthetic HTTP/HTTPS Probing
   - job_name: 'blackbox-http'
-    scrape_interval: 15s
+    scrape_interval: 30s
     scrape_timeout: 10s
     metrics_path: /probe
     params:
@@ -90,7 +100,7 @@ scrape_configs:
 
   # 5. Blackbox Exporter: Synthetic TCP Socket Probing
   - job_name: 'blackbox-tcp'
-    scrape_interval: 15s
+    scrape_interval: 30s
     scrape_timeout: 10s
     metrics_path: /probe
     params:
@@ -113,7 +123,7 @@ scrape_configs:
 
   # 6. Blackbox Exporter: Synthetic DNS Probing
   - job_name: 'blackbox-dns'
-    scrape_interval: 15s
+    scrape_interval: 30s
     scrape_timeout: 10s
     metrics_path: /probe
     params:
@@ -140,7 +150,7 @@ scrape_configs:
 
   # 7. Blackbox Exporter: Synthetic ICMP Echo Probing
   - job_name: 'blackbox-icmp'
-    scrape_interval: 15s
+    scrape_interval: 30s
     scrape_timeout: 10s
     metrics_path: /probe
     params:

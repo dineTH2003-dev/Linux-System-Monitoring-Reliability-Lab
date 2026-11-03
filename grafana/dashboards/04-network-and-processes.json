@@ -1190,7 +1190,7 @@
       "type": "table"
     }
   ],
-  "refresh": "15s",
+  "refresh": "30s",
   "schemaVersion": 39,
   "tags": [
     "linux",

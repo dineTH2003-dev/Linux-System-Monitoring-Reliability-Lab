@@ -65,7 +65,7 @@ compactor:
       store: inmemory
   retention_enabled: true                # Active deletion of expired log chunks
   retention_delete_delay: 2h             # Buffer window before physical unlink
-  retention_delete_worker_count: 50      # Deletion concurrency
+  retention_delete_worker_count: 4       # Deletion concurrency (optimized for single-node lab)
   delete_request_store: filesystem
 
 # Ingester: Manages in-memory chunk lifecycle before flushing to filesystem
@@ -83,7 +83,7 @@ ingester:
 
 # Querier: LogQL Engine
 querier:
-  max_concurrent: 8
+  max_concurrent: 4
 
 # Query Frontend: Splits queries and caches metrics
 query_range:
@@ -91,7 +91,7 @@ query_range:
     cache:
       embedded_cache:
         enabled: true
-        max_size_mb: 100
+        max_size_mb: 32
 
 # Ruler: Evaluates LogQL Recording & Alerting Rules
 ruler:

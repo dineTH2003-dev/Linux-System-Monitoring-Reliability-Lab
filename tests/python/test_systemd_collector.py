@@ -59,3 +59,30 @@ def test_systemd_collector_timeout_and_missing_binary():
 
     assert fam_dict["linux_systemd_unit_active"].samples[0].value == 0.0
     assert fam_dict["linux_systemd_service_collector_errors_total"].samples[0].value == 1.0
+
+
+def test_systemd_collector_query_batch():
+    """Verify batch systemctl show output parsing across multiple units."""
+    batch_stdout = (
+        "Id=ssh.service\n"
+        "LoadState=loaded\n"
+        "ActiveState=active\n"
+        "SubState=running\n\n"
+        "Id=cron.service\n"
+        "LoadState=loaded\n"
+        "ActiveState=inactive\n"
+        "SubState=dead\n"
+    )
+
+    def batch_runner(cmd, **kwargs):
+        return subprocess.CompletedProcess(args=cmd, returncode=0, stdout=batch_stdout)
+
+    config = SystemdConfig(monitored_units=["ssh.service", "cron.service"])
+    collector = SystemdCollector(config=config, runner_func=batch_runner)
+    batch_res = collector._query_batch()
+
+    assert "ssh.service" in batch_res
+    assert batch_res["ssh.service"]["ActiveState"] == "active"
+    assert "cron.service" in batch_res
+    assert batch_res["cron.service"]["ActiveState"] == "inactive"
+

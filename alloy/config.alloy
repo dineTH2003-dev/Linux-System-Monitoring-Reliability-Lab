@@ -18,7 +18,7 @@
 loki.write "default" {
 	endpoint {
 		url        = "http://loki:3100/loki/api/v1/push"
-		batch_wait = "1s"
+		batch_wait = "5s"
 		batch_size = "1MiB"
 	}
 }
@@ -27,7 +27,7 @@ loki.write "default" {
 // 2. Linux Host Systemd Journal Collection
 // ------------------------------------------------------------------------------
 loki.source.journal "systemd" {
-	max_age    = "12h"
+	max_age    = "6h"
 	path       = "/var/log/journal"
 	forward_to = [loki.relabel.journal_filter.receiver]
 	labels     = {

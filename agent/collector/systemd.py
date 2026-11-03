@@ -58,6 +58,55 @@ class SystemdCollector(BaseCollector):
             self._collection_errors += 1
             return None
 
+    def _query_batch(self) -> Dict[str, Dict[str, str]]:
+        """Query all monitored units in a single batched systemctl show call."""
+        if not self.config.monitored_units:
+            return {}
+        cmd = [
+            "systemctl",
+            "show",
+            *self.config.monitored_units,
+            "--property=Id,ActiveState,SubState,LoadState,UnitFileState",
+        ]
+        try:
+            res = self._runner(
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=self.config.timeout_seconds,
+                check=False,
+            )
+            if res.returncode != 0:
+                self._collection_errors += 1
+                return {}
+
+            results: Dict[str, Dict[str, str]] = {}
+            current_unit: Optional[str] = None
+            current_props: Dict[str, str] = {}
+
+            for line in res.stdout.splitlines():
+                line = line.strip()
+                if not line:
+                    if current_unit:
+                        results[current_unit] = current_props
+                    current_unit = None
+                    current_props = {}
+                    continue
+                if "=" in line:
+                    k, v = line.split("=", 1)
+                    k, v = k.strip(), v.strip()
+                    if k == "Id":
+                        current_unit = v
+                    current_props[k] = v
+
+            if current_unit:
+                results[current_unit] = current_props
+
+            return results
+        except (subprocess.TimeoutExpired, FileNotFoundError, PermissionError, OSError):
+            self._collection_errors += 1
+            return {}
+
     def collect(self) -> List[MetricFamily]:
         families: List[MetricFamily] = []
 
@@ -80,9 +129,16 @@ class SystemdCollector(BaseCollector):
             documentation="Total number of errors encountered querying systemd unit states.",
         )
 
+        # Optimization: When running with standard subprocess.run, batch all units into a single
+        # systemctl show call to reduce host fork/exec overhead from N to 1 per scrape.
+        # When a custom runner is supplied (e.g. unit tests expecting single-unit cmd[2]), fall back to per-unit query.
+        batch_props: Optional[Dict[str, Dict[str, str]]] = None
+        if self._runner is subprocess.run:
+            batch_props = self._query_batch()
+
         for unit in self.config.monitored_units:
-            props = self._query_unit(unit)
-            if props is None:
+            props = batch_props.get(unit) if batch_props is not None else self._query_unit(unit)
+            if props is None or props.get("LoadState") == "not-found":
                 # Service not found or error: mark inactive and state failed/inactive
                 active_fam.add_sample(labels={"unit": unit}, value=0.0)
                 for s in self.ACTIVE_STATES:
@@ -101,3 +157,4 @@ class SystemdCollector(BaseCollector):
 
         families.extend([active_fam, state_fam, err_fam])
         return families
+
