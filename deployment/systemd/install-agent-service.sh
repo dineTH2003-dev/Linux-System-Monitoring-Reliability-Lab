@@ -34,7 +34,7 @@ echo "[1/3] Generating tailored systemd unit at $TARGET_SERVICE..."
 cat > "$TARGET_SERVICE" << EOF
 [Unit]
 Description=Linux System Monitoring Agent (Prometheus Exporter)
-Documentation=https://github.com/dineth/Linux-System-Monitoring-Reliability-Lab
+Documentation=https://github.com/dineTH2003-dev/Linux-System-Monitoring-Reliability-Lab
 After=network.target
 
 [Service]

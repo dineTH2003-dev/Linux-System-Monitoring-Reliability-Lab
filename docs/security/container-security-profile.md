@@ -15,36 +15,36 @@ This specification documents the container security controls applied across the 
 
 ## 2. Hardening Matrix Across Lab Containers
 
-| Security Control | Prometheus Server | Grafana Server | Alertmanager | Loki Log Store | Blackbox Exporter | CIS Benchmark Ref |
-|---|---|---|---|---|---|---|
-| **Image Version Pinning** | `prom/prometheus:v2.51.0` | `grafana/grafana:10.4.1` | `prom/alertmanager:v0.27.0` | `grafana/loki:3.0.0` | `prom/blackbox-exporter:v0.25.0` | CIS 4.4 |
-| **Execution User (UID:GID)**| `65534:65534` (`nobody`) | `472:472` (`grafana`) | `65534:65534` (`nobody`) | `10001:10001` (`loki`) | `65534:65534` (`nobody`) | CIS 4.1 |
-| **Read-Only Root Filesystem**| `read_only: true` | `read_only: true` | `read_only: true` | `read_only: true` | `read_only: true` | CIS 5.12 |
-| **Linux Capabilities** | `cap_drop: [ALL]` | `cap_drop: [ALL]` | `cap_drop: [ALL]` | `cap_drop: [ALL]` | `cap_drop: [ALL]` | CIS 5.3 |
-| **No New Privileges** | `true` | `true` | `true` | `true` | `true` | CIS 5.25 |
-| **Host Loopback Binding** | `127.0.0.1:9091` | `127.0.0.1:3001` | `127.0.0.1:9093` | `127.0.0.1:3100` | `127.0.0.1:9115` | CIS 5.13 |
-| **Memory Limit** | `1024M` (Reservation: 256M)| `512M` (Reservation: 128M)| `256M` (Reservation: 64M) | `512M` (Reservation: 128M)| `128M` (Reservation: 32M) | CIS 5.10 |
-| **CPU Limit** | `1.0` core | `1.0` core | `0.5` core | `0.5` core | `0.25` core | CIS 5.11 |
-| **Docker Socket Mounted** | **NO** | **NO** | **NO** | **NO** | **NO** | CIS 5.31 |
-| **Privileged Mode** | **NO** (`false`) | **NO** (`false`) | **NO** (`false`) | **NO** (`false`) | **NO** (`false`) | CIS 5.4 |
-| **Health Check Defined** | Yes (`/-/healthy`) | Yes (`/api/health`) | Yes (`/-/healthy`) | Yes (`/ready`) | Yes (`/-/healthy`) | CIS 4.6 |
+| Security Control | Prometheus | Grafana | Alertmanager | Loki | Blackbox | Grafana Alloy | CIS Ref |
+|---|---|---|---|---|---|---|---|
+| **Image Version Pinning** | `prom/prometheus:v2.51.0` | `grafana/grafana:10.4.1` | `prom/alertmanager:v0.27.0` | `grafana/loki:3.0.0` | `prom/blackbox-exporter:v0.25.0` | `grafana/alloy:v1.0.0` | CIS 4.4 |
+| **Execution User (UID:GID)**| `65534:65534` (`nobody`) | `472:472` (`grafana`) | `65534:65534` (`nobody`) | `10001:10001` (`loki`) | `65534:65534` (`nobody`) | `0:999` (`root:systemd-journal`) | CIS 4.1 |
+| **Read-Only Root Filesystem**| `read_only: true` | `read_only: true` | `read_only: true` | `read_only: true` | `read_only: true` | `read_only: true` | CIS 5.12 |
+| **Linux Capabilities** | `cap_drop: [ALL]` | `cap_drop: [ALL]` | `cap_drop: [ALL]` | `cap_drop: [ALL]` | `cap_drop: [ALL]`, `cap_add: [NET_RAW]` | `cap_drop: [ALL]`, `cap_add: [NET_BIND_SERVICE]` | CIS 5.3 |
+| **No New Privileges** | `true` | `true` | `true` | `true` | `true` | `true` | CIS 5.25 |
+| **Host Loopback Binding** | `127.0.0.1:9091` | `127.0.0.1:3001` | `127.0.0.1:9093` | `127.0.0.1:3100` | `127.0.0.1:9115` | `127.0.0.1:12345` | CIS 5.13 |
+| **Memory Limit** | `1024M` (Res: 256M) | `512M` (Res: 128M) | `256M` (Res: 64M) | `512M` (Res: 128M) | `128M` (Res: 32M) | `384M` (Res: 64M) | CIS 5.10 |
+| **CPU Limit** | `1.0` core | `1.0` core | `0.5` core | `0.5` core | `0.25` core | `0.5` core | CIS 5.11 |
+| **Docker Socket Mounted** | **NO** | **NO** | **NO** | **NO** | **NO** | **NO** | CIS 5.31 |
+| **Privileged Mode** | **NO** (`false`) | **NO** (`false`) | **NO** (`false`) | **NO** (`false`) | **NO** (`false`) | **NO** (`false`) | CIS 5.4 |
+| **Health Check Defined** | Yes (`/-/healthy`) | Yes (`/api/health`) | Yes (`/-/healthy`) | Yes (`/ready`) | Yes (`/-/healthy`) | Yes (`/-/ready`) | CIS 4.6 |
 
 ---
 
 ## 3. Deep-Dive Security Controls
 
 ### 3.1 Non-Root User Execution & UID Pinning
-Running containers as root (UID 0) within a container exposes the underlying host kernel to privilege escalation vulnerabilities (e.g., Dirty COW, CVE-2024-21626 runc breakout).
-- **Prometheus & Alertmanager & Blackbox**: Default to `nobody:nobody` (`65534:65534`), an unprivileged system account possessing zero write permissions on system directories.
+Running containers as root (UID 0) within a container exposes the host kernel to privilege escalation vulnerabilities.
+- **Prometheus & Alertmanager & Blackbox**: Default to `nobody:nobody` (`65534:65534`), an unprivileged system account with no write permissions outside dedicated mounts.
 - **Grafana**: Defaults to standard service UID `472:472`, with ownership strictly scoped to `/var/lib/grafana`.
 - **Loki**: Pinned to UID `10001:10001`, isolating log chunk files from system users.
+- **Grafana Alloy**: Configured with `user: "0:999"`. Primary GID 999 (`systemd-journal`) provides read access to host journal files (`/var/log/journal` mode 0640). Hardening is enforced through dropped capabilities, `no-new-privileges: true`, and read-only host mounts.
 
 ### 3.2 Linux Capability Shedding (`cap_drop: [ALL]`)
-By default, the Docker runtime grants containers a default set of 14 Linux capabilities (such as `CAP_CHOWN`, `CAP_NET_BIND_SERVICE`, `CAP_FOWNER`, `CAP_SETUID`).
-In our lab architecture:
-- **All capabilities are dropped (`cap_drop: [ALL]`) across all 5 containers.**
-- No container requires privileged raw sockets or system configuration rights.
-- **Documented Exception — Blackbox ICMP Probing**: If ICMP ping probing (`icmp_ping` module) is enabled in Blackbox Exporter, the Linux kernel requires `CAP_NET_RAW`. In this lab, HTTP and TCP probing are the primary probers (`http_2xx`, `tcp_connect`), which execute completely in user space without capabilities. If ICMP is required in future phases, only `CAP_NET_RAW` should be explicitly added to Blackbox via `cap_add: [NET_RAW]`, keeping all other capabilities dropped.
+By default, Docker grants containers 14 default Linux capabilities. In our lab:
+- All containers drop all capabilities (`cap_drop: [ALL]`).
+- **Blackbox Exporter**: Explicitly adds `cap_add: [NET_RAW]` to permit ICMP ping probes without requiring root privileges.
+- **Grafana Alloy**: Explicitly adds `cap_add: [NET_BIND_SERVICE]` for its internal HTTP server. All other capabilities remain dropped.
 
 ### 3.3 Immutable Runtimes (`read_only: true`)
 A key defense against container persistence and runtime file tampering is mounting the container's root filesystem as read-only.

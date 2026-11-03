@@ -377,7 +377,7 @@ All indicators are designed strictly from existing, verified metrics in the lab 
 ### 3.1 Realistic Objective Calibration
 
 In SRE, choosing arbitrary "five nines" ($99.999\%$) targets on unclustered, single-node infrastructure is an anti-pattern that destroys engineering credibility:
-- On a single workstation/server (`rubi`), an SLO of $99.999\%$ permits only **26 seconds** of downtime per month. A single standard Linux kernel update and reboot requires 30 to 60 seconds, which would instantly breach the SLO and exhaust 200% of the monthly error budget.
+- On a single workstation or standalone Linux server, an SLO of $99.999\%$ permits only **26 seconds** of downtime per month. A single standard Linux kernel update and reboot requires 30 to 60 seconds, which would instantly breach the SLO and exhaust 200% of the monthly error budget.
 - Objectives must reflect real architectural constraints: single physical host, local storage, non-HA daemon processes, and scheduled developer reboot cycles.
 
 ```

@@ -144,3 +144,40 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 ```
+
+---
+
+## 5. Incident Post-Mortem Template
+
+When running chaos experiments or investigating unexpected failures, use this simple post-mortem template:
+
+```markdown
+# Incident Post-Mortem: [Short Incident Title]
+
+- **Date / Time:** YYYY-MM-DD HH:MM UTC
+- **Author:** [Your Name / Role]
+- **Services Affected:** [e.g. Host Telemetry, Python Agent, Storage Mount]
+- **Severity:** [Warning / Critical]
+
+### 1. Summary
+A brief description of what happened, how it was detected, and how it was resolved.
+
+### 2. Timeline
+- **T0 (Failure Occurred):** The failure began (or was injected).
+- **T1 (Alert Triggered):** Prometheus alert fired (`alertmanager` notification received).
+- **T2 (Investigation):** Triage began using the alert runbook.
+- **T3 (Remediation):** Remediation action or script was executed.
+- **T4 (Restoration):** Service verified healthy and alert resolved.
+
+### 3. Root Cause
+What actually broke? (e.g. disk filled by unrotated logs, runaway loop consumed CPU, service crashed).
+
+### 4. Recovery & Verification
+- What was done to fix it:
+- Command used to verify health:
+
+### 5. Lessons Learned & Action Items
+- What went well:
+- What could be improved (e.g. tighter alert thresholds, better log rotation):
+```
+

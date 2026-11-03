@@ -128,7 +128,7 @@ The platform implements 29 dedicated alerting rules organized into two modular s
   - Warning: `(100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)) > 85`
   - Critical: `(100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[3m])) * 100)) > 95`
 - **Summary**: `Elevated CPU utilization on {{ $labels.instance }} ({{ $value | printf "%.1f" }}%)`
-- **Rationale**: On host `rubi` (12 logical cores), sustained utilization >85% leaves insufficient headroom for bursty desktop workloads. >95% causes severe thread queueing.
+- **Rationale**: On a multi-core Linux host, sustained utilization >85% leaves insufficient headroom for bursty workloads, and >95% causes severe thread queueing.
 - **Diagnostic Command**: `top -b -n 1 -o %CPU | head -n 20`
 - **Runbook**: `docs/troubleshooting/cpu-saturation.md`
 

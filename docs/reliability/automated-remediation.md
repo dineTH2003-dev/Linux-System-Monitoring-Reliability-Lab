@@ -1,13 +1,12 @@
 # Automated Self-Healing & Safe Remediation Architecture
 
-**Project:** Linux System Monitoring & Reliability Lab  
-**Scope:** Guarded Remediation Controller, Circuit Breakers, Rollback Strategies & Incident Lifecycle Math  
+This document describes the guarded self-healing framework, circuit breaker mechanics, and incident lifecycle metrics used in the lab.
 
 ---
 
 ## 1. Architectural Philosophy
 
-Automated remediation in the Linux System Monitoring & Reliability Lab operates under a fundamental principle: **Self-healing must never create a worse incident than the failure it seeks to resolve.**
+Automated remediation operates under one core rule: **self-healing must never make an outage worse than the problem it was trying to fix.**
 
 Off-the-shelf automated scripts frequently lead to secondary outages due to:
 1. Infinite restart loops under persistent configuration corruption.

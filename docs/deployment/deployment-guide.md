@@ -1,73 +1,70 @@
 # Deployment & Operations Guide
 
-**Project:** Linux System Monitoring & Reliability Lab  
-**Scope:** Prerequisites, Preflight Verification, Container Orchestration & Health Verification  
+This guide covers prerequisites, setup instructions, and routine maintenance commands for running the monitoring stack.
 
 ---
 
-## 1. Architecture Overview & Principles
+## 1. Architecture Overview
 
-The **Linux System Monitoring & Reliability Lab** deployment architecture is engineered for 100% reproducibility, non-destructive coexistence with native host services, and rapid automated disaster recovery.
+The lab runs as a set of Docker containers alongside host-level exporters:
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
-│                        UBUNTU 24.04 LINUX HOST                         │
+│                              LINUX HOST                                │
 │                                                                        │
-│   Native Host Services (Untouched & Preserved):                        │
-│   • prometheus.service (:9090) ── Active                               │
-│   • prometheus-node-exporter.service (:9100) ── Active                 │
-│   • grafana-server.service (:3000) ── Active                           │
+│   Native Host Services:                                                │
+│   • Node Exporter (:9100)                                              │
 │                                                                        │
-│   Custom Agent (Systemd User Service / Venv):                          │
+│   Custom Agent (Systemd Service / Virtualenv):                         │
 │   • linux-monitoring-agent.service (:9101)                             │
 │                                                                        │
-│   Docker Desktop LinuxKit VM Boundary (Bridge: lab-monitoring-net)    │
+│   Containerized Monitoring Stack (docker-compose.yml):                 │
 │   ┌──────────────────────────────────────────────────────────────┐     │
-│   │ Project Lab Monitoring Stack (docker-compose.yml):           │     │
-│   │ • Prometheus Server ── Bound to 127.0.0.1:9091               │     │
-│   │ • Grafana Server    ── Bound to 127.0.0.1:3001               │     │
-│   │ • Alertmanager      ── Bound to 127.0.0.1:9093               │     │
-│   │ • Loki Log Store    ── Bound to 127.0.0.1:3100               │     │
-│   │ • Blackbox Exporter ── Bound to 127.0.0.1:9115               │     │
+│   │ • Prometheus Server ── 127.0.0.1:9091                        │     │
+│   │ • Grafana Server    ── 127.0.0.1:3001                        │     │
+│   │ • Alertmanager      ── 127.0.0.1:9093                        │     │
+│   │ • Loki Log Store    ── 127.0.0.1:3100                        │     │
+│   │ • Grafana Alloy     ── 127.0.0.1:12345                       │     │
+│   │ • Blackbox Exporter ── 127.0.0.1:9115                        │     │
 │   └──────────────────────────────────────────────────────────────┘     │
 └────────────────────────────────────────────────────────────────────────┘
 ```
+
+The stack uses dedicated non-standard host ports (e.g., 9091 for Prometheus, 3001 for Grafana) so it will not conflict if you already have default monitoring services running on ports 9090 or 3000.
 
 ---
 
 ## 2. Prerequisites & System Requirements
 
 ### 2.1 Hardware Requirements
-- **CPU**: 64-bit x86_64 processor with minimum 4 cores (Host: 10 cores / 12 threads).
-- **RAM**: Minimum 4 GiB available system memory (Host: 15 GiB physical RAM, 7.0 GiB unallocated).
-- **Disk**: Minimum 10 GiB available storage on root partition (Host: 316 GiB available on `/`).
+- **CPU**: 2 cores minimum (x86_64 or arm64).
+- **RAM**: Minimum 2 GiB available system memory (4 GiB recommended).
+- **Disk**: 10 GiB available storage for Prometheus TSDB blocks and Loki chunks.
 
 ### 2.2 Software Dependencies
-| Component | Minimum Version | Verified Host Version | Status |
-|---|---|---|---|
-| **Linux Kernel** | `>= 5.15` | `7.0.0-38-generic` | Operational |
-| **Docker Engine** | `>= 24.0` | `29.9.1` (Docker Desktop) | Operational |
-| **Docker Compose** | `>= 2.20` | `v5.1.4` (compose plugin) | Operational |
-| **Python** | `>= 3.12` | `3.12.3` | Operational |
-| **systemd** | `>= 245` | systemd 255 | Operational |
-| **curl / wget** | Standard | curl 8.5.0, wget 1.21.4 | Operational |
+| Component | Minimum Version | Notes |
+|---|---|---|
+| **Linux OS** | Ubuntu 22.04+ or Debian 12+ | Kernel >= 5.15 with PSI enabled |
+| **Docker Engine** | `>= 24.0` | With compose plugin |
+| **Python** | `>= 3.10` | For custom monitoring agent |
+| **systemd** | `>= 245` | Standard on modern Linux distros |
+| **curl / wget** | Any modern version | Used by health check scripts |
 
 ---
 
 ## 3. End-to-End Deployment Procedure
 
 ### Step 1: Pre-Flight Verification
-Run the automated preflight checker to validate Docker status, permissions, disk capacity, and port availability:
+Run the preflight check script to verify Docker, required permissions, and port availability:
 ```bash
-cd /path/to/Linux-System-Monitoring-Reliability-Lab
 ./deployment/deploy.sh preflight
 ```
-*Expected Output:*
+Expected output:
 ```
 [INFO]  Docker Engine is operational.
-[INFO]  Docker Compose is available (5.1.4).
+[INFO]  Docker Compose is available.
 [INFO]  Active .env configuration verified (mode 0600).
-[INFO]  Filesystem capacity adequate: 316 GiB available.
+[INFO]  Filesystem capacity adequate.
 [INFO]  Preflight checks completed successfully.
 ```
 

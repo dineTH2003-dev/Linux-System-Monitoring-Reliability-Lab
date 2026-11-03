@@ -19,35 +19,35 @@ The agent gathers data directly from Linux virtual filesystems:
 
 | Kernel Interface | What It Provides | Parsed Metric in Agent | Prometheus Metric Name |
 |---|---|---|---|
-| `/proc/stat` | Cumulative CPU ticks spent in each mode (user, system, idle, iowait, etc.) | CPU mode utilization and core count | `custom_cpu_usage_ratio`, `custom_cpu_cores_total` |
-| `/proc/pressure/cpu` | Pressure Stall Information (PSI): percentage of time tasks are stalled on CPU | 10s, 60s, 300s CPU stall percentages | `custom_cpu_pressure_some_ratio` |
-| `/proc/meminfo` | Real-time memory breakdown (`MemTotal`, `MemFree`, `MemAvailable`, `Buffers`, `Cached`, `SwapTotal`, `SwapFree`) | Available RAM %, Swap %, and absolute byte counters | `custom_memory_available_bytes`, `custom_swap_used_ratio` |
-| `/proc/pressure/memory` | PSI memory stall metrics (some / full) | Memory pressure stall ratios | `custom_memory_pressure_some_ratio` |
-| `/proc/diskstats` | Sectors read/written, I/O in progress, time spent doing I/O | Read/write throughput and I/O latency | `custom_disk_io_read_bytes_total`, `custom_disk_io_write_bytes_total` |
-| `/proc/mounts` & `statvfs` | Active mountpoints, filesystem types, block sizes, free blocks, and inodes | Disk capacity and inode saturation | `custom_filesystem_usage_ratio`, `custom_inode_usage_ratio` |
-| `/proc/net/dev` | Network interface rx/tx bytes, packets, drops, and errors | Throughput and interface error rates | `custom_network_receive_bytes_total`, `custom_network_errors_total` |
-| `systemctl` / D-Bus | State of critical host systemd units | Failed unit count and service status | `custom_systemd_units_failed_total` |
+| `/proc/stat` | Cumulative CPU ticks spent in each mode (user, system, idle, iowait, etc.) | CPU mode utilization and load averages | `linux_cpu_utilization_ratio`, `linux_load1` |
+| `/proc/pressure/cpu` | Pressure Stall Information (PSI): percentage of time tasks are stalled on CPU | 10s, 60s, 300s CPU stall ratios | `linux_cpu_pressure_some_ratio` |
+| `/proc/meminfo` | Real-time memory breakdown (`MemTotal`, `MemFree`, `MemAvailable`, `Buffers`, `Cached`, `SwapTotal`, `SwapFree`) | Available RAM, swap, and byte counters | `linux_memory_available_bytes`, `linux_swap_used_bytes` |
+| `/proc/pressure/memory` | PSI memory stall metrics (some / full) | Memory pressure stall ratios | `linux_memory_pressure_ratio` |
+| `/proc/diskstats` | Sectors read/written, I/O in progress, time spent doing I/O | Read/write throughput and I/O latency | `linux_disk_read_bytes_total`, `linux_disk_written_bytes_total` |
+| `/proc/mounts` & `statvfs` | Active mountpoints, filesystem types, block sizes, free blocks, and inodes | Disk capacity and inode saturation | `linux_filesystem_used_bytes`, `linux_inode_used` |
+| `/proc/net/dev` | Network interface rx/tx bytes, packets, drops, and errors | Throughput and interface error rates | `linux_network_receive_bytes_total`, `linux_network_receive_errors_total` |
+| `systemctl` / D-Bus | State of critical host systemd units | Unit active/failed states | `linux_systemd_unit_state` |
 
 ---
 
 ## 3. Prometheus Scrape Configuration (`prometheus/prometheus.yml`)
 
-Prometheus operates in a hardened container listening on loopback `127.0.0.1:9091`. It is configured with targeted scrape jobs:
+Prometheus operates in a container listening on `127.0.0.1:9091`. It is configured with targeted scrape jobs:
 
 - **`job="node"`**: Scrapes the host Node Exporter (`:9100`).
-- **`job="custom-agent"`**: Scrapes the Python monitoring daemon (`127.0.0.1:9101/metrics`).
+- **`job="python-agent"`**: Scrapes the Python monitoring daemon (`127.0.0.1:9101/metrics`).
 - **`job="prometheus"`**: Scrapes Prometheus internal runtime metrics (`localhost:9090`).
 - **`job="blackbox-http"`**: Probes local HTTP endpoints (`/healthz`, `/api/health`).
-- **`job="blackbox-dns"`**: Probes public DNS resolvers (`1.1.1.1:53`, `8.8.8.8:53`).
+- **`job="blackbox-dns"`**: Probes DNS resolvers (`1.1.1.1:53`, `8.8.8.8:53`).
 - **`job="alloy"`**: Scrapes Grafana Alloy telemetry pipeline (`:12345`).
 
-Scrape interval is set to **15s** with a **10s** timeout, and TSDB data retention is configured for **15 days** (`--storage.tsdb.retention.time=15d`).
+Scrape interval is configured globally to **15s** with a **10s** timeout, and TSDB data retention is set to **15 days** (`--storage.tsdb.retention.time=15d`).
 
 ---
 
 ## 4. Provisioned Grafana Dashboards
 
-The lab automatically provisions 5 operational dashboards from declarative JSON files in `grafana/dashboards/`:
+The lab automatically provisions 5 operational dashboards from JSON files in `grafana/dashboards/`:
 
 ### 1. `01 — Linux System Overview`
 - **Purpose:** High-level operational health of the host.
@@ -86,8 +86,8 @@ The lab automatically provisions 5 operational dashboards from declarative JSON 
 ### 5. `05 — Python Agent & SRE Overview`
 - **Purpose:** Custom Python agent introspection and SRE availability tracking.
 - **Key Panels:**
-  - Agent Collector Execution Duration (`custom_agent_collector_duration_seconds`)
-  - Collector Error Rates (`custom_agent_collector_errors_total`)
+  - Agent Collector Execution Duration (`linux_agent_collector_duration_seconds`)
+  - Collector Error Rates (`linux_agent_collector_errors_total`)
   - 99.9% SLO Error Budget Remaining (%)
   - Multi-Window Error Budget Burn Rates (14.4x fast burn, 6x medium burn, 1x slow burn)
 

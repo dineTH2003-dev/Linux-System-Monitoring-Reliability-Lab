@@ -11,14 +11,14 @@ The **Linux System Monitoring & Reliability Lab** is engineered around the princ
 
 ### 1.1 Coexistence Invariants with Native Host Services
 
-The development host (`rubi`) runs native, production-critical instances of Prometheus (port `9090`) and Grafana (port `3000`), managed directly via systemd. Under no circumstances may the lab monitoring stack collide with, disrupt, or reconfigure these native services.
+The host system may run native instances of Prometheus (port `9090`) or Grafana (port `3000`), managed directly via systemd. Under no circumstances may the lab monitoring stack collide with, disrupt, or reconfigure these native services.
 
 To ensure non-interference:
 1. **Loopback Binding Isolation:** Every containerized lab service binds strictly to `127.0.0.1` (never `0.0.0.0`).
 2. **Dedicated Port Allocations:**
    - Lab Prometheus: `127.0.0.1:9091` -> Container `9090`
    - Lab Grafana: `127.0.0.1:3001` -> Container `3000`
-   - Lab Alertmanager: `127.0.0.1:9093` -> Container `9093`
+   - Lab Alertmanager: `127.0.0.1:9093` (or `9094`) -> Container `9093`
    - Lab Blackbox Exporter: `127.0.0.1:9115` -> Container `9115`
    - Lab Loki: `127.0.0.1:3100` -> Container `3100`
    - Lab Alloy: `127.0.0.1:12345` -> Container `12345`
@@ -32,7 +32,7 @@ To ensure non-interference:
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
-│                              UBUNTU 24.04 LINUX HOST (rubi)                             │
+│                              UBUNTU 24.04 LINUX HOST                                   │
 │                                                                                        │
 │   Kernel Subsystems & Hardware Counters:                                               │
 │   • /proc/stat, /proc/cpuinfo, /proc/pressure/cpu (CPU & PSI)                          │
@@ -165,7 +165,7 @@ To ensure non-interference:
 
 1. **Journal Access:** Grafana Alloy mounts `/var/log/journal` and `/etc/machine-id` read-only, running as `user: "0:999"` (root user with primary GID 999 `systemd-journal`). Primary GID 999 grants read access to mode 0640 journal files, while UID 0 is retained due to existing persistent volume ownership (`lab_alloy_data` owned by `0:4`). Hardening is enforced via `read_only: true`, `cap_drop: [ALL]`, and `no-new-privileges:true`.
 2. **Ingestion & Labeling:** Alloy translates binary journal entries into structured streams tagged with `job="systemd-journal"`, `unit`, and `priority`.
-3. **LogQL Exploration:** Operators in Grafana can click directly from a CPU or memory spike in Prometheus to correlate with journal logs from the exact same timestamp using unified labels (`instance="rubi"`).
+3. **LogQL Exploration:** Operators in Grafana can click directly from a CPU or memory spike in Prometheus to correlate with journal logs from the exact same timestamp using unified labels (`instance="lab-host"` or `$instance`).
 
 ### 3.3 Incident Routing & Inhibition Hierarchy
 

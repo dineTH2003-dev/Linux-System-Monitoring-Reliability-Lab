@@ -126,7 +126,7 @@ Incident Triage Escalation Pathway
                               ▼
 ┌────────────────────────────────────────────────────────────┐
 │ STEP 1: Immediate Triage (< 5 Minutes)                     │
-│ • Verify host responsiveness: ping rubi, ssh               │
+│ • Verify host responsiveness: ping host, check ssh/network │
 │ • Check target status: curl localhost:9091/api/v1/targets  │
 │ • Inspect systemd units: systemctl status node_exporter    │
 └─────────────────────────────┬──────────────────────────────┘
@@ -143,7 +143,7 @@ Incident Triage Escalation Pathway
 ┌────────────────────────────────────────────────────────────┐
 │ STEP 3: Post-Incident Recovery & Budget Audit              │
 │ • Audit consumed seconds: PromQL remaining budget query    │
-│ • Log incident in docs/reports/                            │
+│ • Document incident using Post-Mortem template             │
 │ • Conduct Blameless Post-Mortem if > 10% budget consumed   │
 └────────────────────────────────────────────────────────────┘
 ```

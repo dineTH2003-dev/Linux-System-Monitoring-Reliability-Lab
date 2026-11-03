@@ -36,7 +36,7 @@ The platform implements five strict security invariants across all configuration
 All published service ports are strictly bound to `127.0.0.1`:
 - Prometheus: `127.0.0.1:9091`
 - Grafana: `127.0.0.1:3001`
-- Alertmanager: `127.0.0.1:9094`
+- Alertmanager: `127.0.0.1:9093`
 - Loki: `127.0.0.1:3100`
 - Blackbox Exporter: `127.0.0.1:9115`
 - Grafana Alloy: `127.0.0.1:12345`
@@ -54,7 +54,7 @@ All container definitions in `docker-compose.yml` pass 42/42 CIS Docker Benchmar
   - Alloy: `user: "0:999"` (non-root `systemd-journal` GID mapping for read-only log access)
   - Alertmanager: `user: "65534:65534"`
 - **Read-Only Root Filesystems:** All containers enforce `read_only: true`. Temporary or stateful directories are mounted via isolated named volumes (`lab_*`) or tmpfs.
-- **Capabilities Dropped:** All Linux capabilities are dropped (`cap_drop: [ALL]`).
+- **Capabilities Dropped:** All Linux capabilities are dropped (`cap_drop: [ALL]`), with strictly scoped exceptions where necessary (`NET_RAW` for Blackbox ICMP and `NET_BIND_SERVICE` for Alloy).
 - **Privilege Escalation Prevention:** Enforced via `security_opt: ["no-new-privileges:true"]`.
 
 ### 3. Secrets & Credential Management

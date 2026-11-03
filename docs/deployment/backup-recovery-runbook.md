@@ -1,11 +1,10 @@
 # Backup & Disaster Recovery Runbook
 
-**Project:** Linux System Monitoring & Reliability Lab  
-**Scope:** Docker Named Volume Backups, Manifest Verification & Disaster Recovery Procedures  
+This runbook covers backing up Docker volumes, verifying archive integrity, and restoring the monitoring stack after failure.
 
 ---
 
-## 1. Objectives & RPO / RTO Targets
+## 1. Objectives & Recovery Targets
 
 - **Recovery Point Objective (RPO)**: <= 24 hours (nightly automated or pre-change snapshot).
 - **Recovery Time Objective (RTO)**: <= 15 minutes to fully restored, verified operational status.
@@ -18,9 +17,9 @@
 
 ---
 
-## 2. Operational Phases: Verification, Preflight, and Full Recovery
+## 2. Operational Modes: Verification, Preflight, and Full Recovery
 
-To eliminate the risk of accidental data loss or split-brain corruption during disaster recovery operations, the lab architecture establishes three strictly distinct operational tiers:
+The backup and recovery tooling provides three operations:
 
 ### Tier 1: Backup Verification (Read-Only, Zero Impact)
 - **Objective**: Cryptographically verify the integrity of a published backup set without touching running services or the Docker engine.
