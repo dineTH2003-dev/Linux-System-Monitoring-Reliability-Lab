@@ -101,6 +101,8 @@ The 5 provisioned dashboards are:
 
 - [System Architecture](docs/architecture/system-architecture.md) — Port mappings, data flow, and security boundaries.
 - [Deployment & Operations Guide](docs/deployment/deployment-guide.md) — Requirements and step-by-step setup.
+- [Multi-Host Monitoring](docs/deployment/multi-host-monitoring.md) — Monitoring multiple remote Linux nodes with File-SD.
+- [Resource Optimization & Sizing](docs/deployment/resource-optimization-and-sizing.md) — Measured resource usage, tuning options, and capacity sizing.
 - [Monitoring & Dashboard Guide](docs/monitoring/overview.md) — Metrics catalog, custom collectors, and panels.
 - [Alerting & Incident Detection](docs/monitoring/alerting-and-incident-detection.md) — Alert rules, routing, and probes.
 - [SLI/SLO Framework](docs/sre/sli-slo-framework.md) — Availability metrics and 99.9% SLO definition.

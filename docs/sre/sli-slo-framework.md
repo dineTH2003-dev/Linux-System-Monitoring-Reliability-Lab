@@ -228,7 +228,7 @@ All indicators are designed strictly from existing, verified metrics in the lab 
 - **Denominator**: Total scrapes attempted (`count_over_time(up{job="node"}[T])`).
 - **PromQL Representation**:
   ```promql
-  avg_over_time(up{job="node",instance="rubi"}[30d]) * 100
+  avg_over_time(up{job="node",instance="primary-node"}[30d]) * 100
   ```
 - **Measurement Source**: Prometheus server internal scrape harness (`up`).
 - **Evaluation Interval**: 15 seconds.
@@ -251,7 +251,7 @@ All indicators are designed strictly from existing, verified metrics in the lab 
 - **Denominator**: Total scrapes attempted (`count_over_time(up{job="python-agent"}[T])`).
 - **PromQL Representation**:
   ```promql
-  avg_over_time(up{job="python-agent",instance="rubi"}[30d]) * 100
+  avg_over_time(up{job="python-agent",instance="primary-node"}[30d]) * 100
   ```
 - **Measurement Source**: Prometheus server scrape engine (`up`).
 - **Evaluation Interval**: 15 seconds.

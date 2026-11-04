@@ -97,7 +97,7 @@ The platform implements 29 dedicated alerting rules organized into two modular s
 - **Duration**: `2m`
 - **Summary**: `Host {{ $labels.instance }} is unavailable or unreachable`
 - **Description**: All primary telemetry exporters (`node`, `python-agent`) or ICMP echo ping probes for the host have failed for >2 minutes.
-- **Diagnostic Command**: `ping -c 3 rubi && ip neigh`
+- **Diagnostic Command**: `ping -c 3 127.0.0.1 && ip neigh`
 - **Runbook**: `docs/troubleshooting/host-unavailable.md`
 
 #### 2. Node Exporter Unavailable (`NodeExporterUnavailable`)
@@ -341,7 +341,7 @@ When an alert fires in Alertmanager, on-call SREs should follow this fast-triage
 
 | Alert Category | Immediate First-Step Diagnostic Command | Root Cause Remediation Action |
 |---|---|---|
-| **Host / Exporter Down** | `ping -c 3 rubi && systemctl status prometheus-node-exporter.service` | Restart fallen service via `systemctl restart prometheus-node-exporter`. Check kernel dmesg for OOM kill. |
+| **Host / Exporter Down** | `ping -c 3 127.0.0.1 && systemctl status prometheus-node-exporter.service` | Restart fallen service via `systemctl restart prometheus-node-exporter`. Check kernel dmesg for OOM kill. |
 | **Critical CPU Saturation** | `ps -eo pid,ppid,cmd,%cpu --sort=-%cpu \| head -n 15` | Inspect runaway processes. Renice or terminate rogue compilations (`kill -15 <pid>`). |
 | **Critical Memory Starvation** | `free -h && vmstat 1 5 && dmesg -T \| grep -i oom \| tail -n 10` | Identify top memory consumers (`ps aux --sort=-%mem`). Free cached buffers or restart leaking services. |
 | **Filesystem Critical Space** | `df -hT && du -xh --max-depth=2 / \| sort -hr \| head -n 10` | Clean journal logs (`journalctl --vacuum-time=2d`), prune Docker images (`docker system prune -f`), or purge `/tmp`. |
