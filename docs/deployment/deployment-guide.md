@@ -159,11 +159,17 @@ Execute the multi-service health checker at any time to verify real-time status:
 ```bash
 ./deployment/backup.sh
 ```
-Creates a compressed, timestamped, SHA-256 verified archive under `backups/backup-YYYYMMDD-HHMMSS.tar.gz`.
+Creates a compressed, timestamped, SHA-256 verified backup set under `backups/backup-set-YYYYMMDD-HHMMSSZ-<16hex>/` containing the archive `backup-YYYYMMDD-HHMMSSZ-<16hex>.tar.gz` alongside cryptographic `.sha256` checksum and `.manifest` integrity files.
 
-### Restoring from an Archive
+### Restoring from an Archive or Backup Set
 ```bash
 ./deployment/deploy.sh down
-./deployment/restore.sh backups/backup-YYYYMMDD-HHMMSS.tar.gz
+
+# Restore using the published backup set directory:
+./deployment/restore.sh backups/backup-set-YYYYMMDD-HHMMSSZ-<16hex>
+
+# Or restore directly by specifying the archive file:
+./deployment/restore.sh backups/backup-set-YYYYMMDD-HHMMSSZ-<16hex>/backup-YYYYMMDD-HHMMSSZ-<16hex>.tar.gz
+
 ./deployment/deploy.sh up
 ```

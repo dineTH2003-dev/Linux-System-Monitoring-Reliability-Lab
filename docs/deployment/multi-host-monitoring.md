@@ -16,7 +16,7 @@ This guide explains how to monitor multiple separate Linux machines using the ce
 |  +---------^----------+        +---------^----------+        +-----------------^----------------+  |
 |            |                             |                                     |                   |
 |  +---------+-----------------------------+----------+                          | (HTTP Push)       |
-|  |                  Prometheus (:9090)              |                          |                   |
+|  |           Prometheus (:9091 host)            |                          |                   |
 |  | Scrapes via File-SD: prometheus/targets/*.json   |                          |                   |
 |  +---------^-----------------------------^----------+                          |                   |
 +------------|-----------------------------|-------------------------------------|-------------------+
@@ -34,7 +34,7 @@ This guide explains how to monitor multiple separate Linux machines using the ce
 ### Key Principles:
 - **Zero-Downtime Dynamic Target Discovery:** Prometheus uses File-Based Service Discovery (`file_sd_configs`). Adding or removing target JSON files in `prometheus/targets/` takes effect within 30 seconds without restarting Prometheus.
 - **Deterministic Host Isolation:** Every host is labeled with its unique `instance` name. Grafana dashboards automatically isolate metrics per host using the `$instance` template variable (`label_values(node_uname_info, instance)`).
-- **Centralized Log Streams:** Logs pushed to Loki are tagged with `host="<hostname>"`, allowing operators to isolate host logs via LogQL `{host="<hostname>"}`.
+- **Centralized Log Streams & Telemetry Correlation:** Logs pushed to Loki are tagged with `host="<hostname>"`, identically matching the Prometheus `instance` label (e.g. `primary-node`, `node-02`). This enables unified cross-correlation between time-series metrics and journal log streams using the same host identifier.
 
 ---
 
@@ -50,13 +50,16 @@ docker compose -f docker-compose.multihost.yml up -d
 ./scripts/monitoring/add_remote_host.sh node-02 lab-mock-node-02 9100
 ./scripts/monitoring/add_remote_host.sh node-03 lab-mock-node-03 9100
 
-# 3. Run the automated multi-host verification test (14 assertions)
+# 3. Run the automated multi-host verification test (28 assertions)
 bash tests/multihost/test_multihost_monitoring.sh
 ```
 
 ---
 
 ## 3. Adding a Real Remote Linux Machine
+
+> [!NOTE]
+> **Demonstration Scope:** While the configuration generation tooling and remote installer script have been tested and verified, deployment across physical remote Linux hardware has not yet been demonstrated in this lab environment. Multi-host capabilities are currently demonstrated and validated using local containerized mock fixtures.
 
 ### Step 1: Install Exporters on the Remote Machine
 
@@ -110,23 +113,42 @@ This generates `prometheus/targets/node_<hostname>.json`. Prometheus will automa
 
 ### Step 3: Forward Remote Logs to Central Loki (Optional)
 
-On the remote machine, configure Grafana Alloy, Promtail, or a lightweight shipper to push logs to the central Loki endpoint:
+To stream host systemd journal logs from remote Linux machines to the central Loki service, use the parametric Alloy installer script (`deployment/systemd/install-alloy-service.sh`). The installer generates a static, validated River configuration with literal host identity labels that match the Prometheus `instance` label:
 
-```alloy
-// Example Alloy push endpoint on remote host
-loki.write "central" {
-  endpoint {
-    url = "http://<CENTRAL_SERVER_IP>:3100/loki/api/v1/push"
-  }
-}
+> [!IMPORTANT]
+> **Network Boundary Requirement:** In the default lab configuration, central Loki is bound strictly to `127.0.0.1:3100` (loopback). Do **not** expose Loki directly to the public internet. Remote log forwarding requires routing via a secure private network, WireGuard VPN tunnel, or an authenticated internal reverse proxy.
 
-loki.source.journal "systemd" {
-  forward_to = [loki.write.central.receiver]
-  labels     = {
-    job  = "systemd-journal",
-    host = "<REMOTE_HOSTNAME>",
-  }
-}
+#### Installation Examples by Node:
+
+1. **Central Monitoring Server (`primary-node`):**
+   ```bash
+   # Generates host="primary-node" and points to local loopback Loki (127.0.0.1:3100)
+   sudo ./deployment/systemd/install-alloy-service.sh --central
+   sudo systemctl enable --now alloy.service
+   ```
+
+2. **Secondary Node (`node-02`):**
+   ```bash
+   # Generates host="node-02" pointing to the central server's private VPN/internal IP
+   sudo ./deployment/systemd/install-alloy-service.sh \
+     --host-identity node-02 \
+     --loki-url http://<CENTRAL_VPN_OR_INTERNAL_IP>:3100/loki/api/v1/push
+   sudo systemctl enable --now alloy.service
+   ```
+
+3. **Tertiary Node (`node-03`):**
+   ```bash
+   # Generates host="node-03" pointing to the central server's private VPN/internal IP
+   sudo ./deployment/systemd/install-alloy-service.sh \
+     --host-identity node-03 \
+     --loki-url http://<CENTRAL_VPN_OR_INTERNAL_IP>:3100/loki/api/v1/push
+   sudo systemctl enable --now alloy.service
+   ```
+
+#### Offline Testing & Dry-Run:
+You can test configuration generation and syntax validation on any machine without root privileges:
+```bash
+./deployment/systemd/install-alloy-service.sh --host-identity node-02 --loki-url http://10.0.0.1:3100/loki/api/v1/push --dry-run
 ```
 
 ---
