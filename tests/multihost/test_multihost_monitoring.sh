@@ -138,7 +138,74 @@ assert_test "Loki returns actual log records for node-03" \
 assert_test "Loki log streams are strictly isolated between node-02 and node-03" \
     "! echo '$NODE2_RECORDS' | grep -q 'node-03' && ! echo '$NODE3_RECORDS' | grep -q 'node-02'"
 
-# 5. Summary
+# 5. Verify Alloy Host Identity & Parametric Configuration
+echo ""
+echo "[Test Group 5: Alloy Host Identity & Installer Contracts]"
+
+assert_test "Canonical alloy/config.alloy contains host relabel rule" \
+    "grep -q 'source_labels = \[\"host\"\]' alloy/config.alloy && grep -A 4 'source_labels = \[\"host\"\]' alloy/config.alloy | grep -q 'target_label  = \"host\"'"
+
+assert_test "Alloy installer script exists and is executable" \
+    "[[ -x deployment/systemd/install-alloy-service.sh ]]"
+
+# Test central dry-run configuration rendering
+CENTRAL_DRYRUN_OUT="$(./deployment/systemd/install-alloy-service.sh --central --dry-run 2>&1 || true)"
+assert_test "Alloy installer passes syntax validation for central primary-node" \
+    "echo '$CENTRAL_DRYRUN_OUT' | grep -q 'Configuration validation passed'"
+
+# Render temporary node-02 and node-03 configs to verify literal replacement and Loki URL
+TMP_NODE2_CFG="$(mktemp /tmp/alloy_test_node02_XXXXXX.alloy)"
+TMP_NODE3_CFG="$(mktemp /tmp/alloy_test_node03_XXXXXX.alloy)"
+trap 'rm -f "$TMP_NODE2_CFG" "$TMP_NODE3_CFG"' EXIT
+
+./deployment/systemd/install-alloy-service.sh --host-identity node-02 --loki-url "http://10.0.0.2:3100/loki/api/v1/push" --output "$TMP_NODE2_CFG" >/dev/null 2>&1 || true
+./deployment/systemd/install-alloy-service.sh --host-identity node-03 --loki-url "http://10.0.0.3:3100/loki/api/v1/push" --output "$TMP_NODE3_CFG" >/dev/null 2>&1 || true
+
+assert_test "Installer renders literal host label and replacement for node-02" \
+    "grep -q 'host        = \"node-02\"' '$TMP_NODE2_CFG' && grep -q 'replacement   = \"node-02\"' '$TMP_NODE2_CFG'"
+
+assert_test "Installer renders literal host label and replacement for node-03" \
+    "grep -q 'host        = \"node-03\"' '$TMP_NODE3_CFG' && grep -q 'replacement   = \"node-03\"' '$TMP_NODE3_CFG'"
+
+assert_test "Installer renders custom Loki push endpoints" \
+    "grep -q 'url        = \"http://10.0.0.2:3100/loki/api/v1/push\"' '$TMP_NODE2_CFG' && grep -q 'url        = \"http://10.0.0.3:3100/loki/api/v1/push\"' '$TMP_NODE3_CFG'"
+
+# Test error handling
+assert_test "Installer rejects execution without required remote identity" \
+    "! ./deployment/systemd/install-alloy-service.sh --loki-url http://10.0.0.1:3100/loki/api/v1/push --dry-run >/dev/null 2>&1"
+
+assert_test "Installer rejects invalid host identity symbols" \
+    "! ./deployment/systemd/install-alloy-service.sh --host-identity 'node@02!' --loki-url http://10.0.0.1:3100/loki/api/v1/push --dry-run >/dev/null 2>&1"
+
+assert_test "Installer rejects non-HTTP(S) Loki URLs" \
+    "! ./deployment/systemd/install-alloy-service.sh --host-identity node-02 --loki-url 'ftp://10.0.0.1:3100' --dry-run >/dev/null 2>&1"
+
+# Test isolated backup and rollback behavior
+TMP_TEST_DIR="$(mktemp -d /tmp/alloy_test_rollback_XXXXXX)"
+TMP_ISOLATED_CFG="${TMP_TEST_DIR}/config.alloy"
+echo "// KNOWN SAFE BASELINE CONFIG" > "$TMP_ISOLATED_CFG"
+
+./deployment/systemd/install-alloy-service.sh --central \
+    --target-config "$TMP_ISOLATED_CFG" --skip-systemd >/dev/null 2>&1 || true
+
+BACKUP_FILES_COUNT="$(find "$TMP_TEST_DIR" -name "config.alloy.backup.*" | wc -l)"
+assert_test "Installer creates timestamped backup before modifying target configuration" \
+    "[[ $BACKUP_FILES_COUNT -ge 1 ]]"
+
+# Force a reload failure against an invalid port and verify rollback
+echo "// KNOWN PRE-FAILURE STATE" > "$TMP_ISOLATED_CFG"
+./deployment/systemd/install-alloy-service.sh --host-identity node-02 --loki-url http://10.0.0.2:3100/loki/api/v1/push \
+    --target-config "$TMP_ISOLATED_CFG" --skip-systemd --reload --reload-endpoint "http://127.0.0.1:19999/-/reload" >/dev/null 2>&1 || true
+
+ROLLED_BACK_CONTENT="$(cat "$TMP_ISOLATED_CFG")"
+assert_test "Installer triggers automated rollback when live reload fails" \
+    "[[ '$ROLLED_BACK_CONTENT' == '// KNOWN PRE-FAILURE STATE' ]]"
+
+rm -rf "$TMP_TEST_DIR"
+rm -f "$TMP_NODE2_CFG" "$TMP_NODE3_CFG"
+trap - EXIT
+
+# 6. Summary
 echo ""
 echo "======================================================================"
 echo "  MULTI-HOST VERIFICATION SUMMARY"

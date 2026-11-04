@@ -10,6 +10,16 @@
 // This captures all native host services (ssh, cron, kernel) as well as the
 // Python Monitoring Agent (SyslogIdentifier=linux-monitoring-agent) without
 // requiring Docker daemon socket exposure or arbitrary host file mounts.
+//
+// Deployment Modes:
+// - Docker Compose (canonical): Uses this file directly. The container
+//   hostname is set to HOST_HOSTNAME (default: primary-node) via
+//   docker-compose.yml. constants.hostname resolves to the container name.
+//   Loki URL uses Docker DNS: http://loki:3100/loki/api/v1/push
+// - Native systemd installation: deployment/systemd/install-alloy-service.sh
+//   generates a host-specific copy at /etc/alloy/config.alloy with a literal
+//   host identity string and a direct Loki URL. Do NOT copy this file to
+//   /etc/alloy/ directly; always use the installer.
 // ==============================================================================
 
 // ------------------------------------------------------------------------------
@@ -40,6 +50,14 @@ loki.source.journal "systemd" {
 // Relabel rules for systemd journal: promote low-cardinality metadata and drop noise
 loki.relabel "journal_filter" {
 	forward_to = [loki.process.journal_sanitization.receiver]
+
+	// Enforce consistent host identity matching Prometheus instance label
+	rule {
+		source_labels = ["host"]
+		regex         = ".*"
+		target_label  = "host"
+		replacement   = constants.hostname
+	}
 
 	// Extract standard systemd unit name into 'unit' label
 	rule {

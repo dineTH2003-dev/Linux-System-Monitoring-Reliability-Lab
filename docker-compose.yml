@@ -249,6 +249,9 @@ services:
     image: grafana/alloy:v1.0.0
     container_name: lab-alloy
     restart: unless-stopped
+    hostname: "${HOST_HOSTNAME:-primary-node}"
+    environment:
+      - HOST_HOSTNAME=${HOST_HOSTNAME:-primary-node}
     # Security Rationale: Process runs with primary UID 0 and primary GID 999 (root:systemd-journal).
     # Host journal files (/var/log/journal mode 0640) are owned by root:systemd-journal (GID 999).
     # Primary GID 999 provides read access to the mode 0640 journal files. UID 0 is retained strictly
