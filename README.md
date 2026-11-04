@@ -45,7 +45,7 @@ The platform collects real-time system metrics and systemd journal logs from Lin
 
 I built this project as an IT student and aspiring Systems/Site Reliability Engineer to master Linux observability from first principles. Rather than relying on managed cloud SaaS agents (Datadog, New Relic) that abstract away system internals, I wanted to:
 1. Understand how the Linux kernel exposes telemetry via `/proc`, `/sys`, and `systemd` journals.
-2. Build a native, zero-dependency custom metrics exporter in Python using raw kernel pseudo-filesystems.
+2. Build a custom metrics exporter in Python using standard kernel pseudo-filesystems (`/proc`, `/sys`) and audited libraries (`psutil`, `prometheus_client`, `PyYAML`).
 3. Architect a structured SRE observability stack adhering to Google SRE Golden Signals, multi-window error budgets, and strict CIS Docker Benchmark security profiles.
 4. Practice writing idempotent disaster recovery tooling and guarded, automated self-healing scripts with circuit breakers.
 
@@ -104,6 +104,9 @@ All containerized monitoring components run on a dedicated Docker bridge network
 | **Python Agent** (Native) | N/A | `9101` | `127.0.0.1` | Custom granular process & PSI metrics |
 | **Mock Alert Receiver** | N/A | `5002` | `127.0.0.1` | Safe local webhook receiver for E2E alert testing |
 
+> [!NOTE]
+> **Network Binding Distinction:** All 6 Docker containers (`Prometheus`, `Grafana`, `Loki`, `Alertmanager`, `Blackbox Exporter`, `Alloy`) bind strictly to `127.0.0.1` (loopback). The host's pre-existing native Node Exporter service binds to `:9100` across all interfaces (`0.0.0.0`) per standard host OS configuration, and was intentionally left untouched to prevent disruption to existing native host workflows.
+
 ---
 
 ## Technology Stack
@@ -113,7 +116,7 @@ All containerized monitoring components run on a dedicated Docker bridge network
 - **Alert Management:** [Alertmanager](https://prometheus.io/docs/alerting/latest/alertmanager/) v0.27.
 - **Visualization:** [Grafana](https://grafana.com/) v10.4 (provisioned dashboards, alert rules, and datasources).
 - **Synthetic Monitoring:** [Blackbox Exporter](https://github.com/prometheus/blackbox_exporter) v0.25.
-- **Host Agents & Tooling:** Python 3 (`psutil`, `prometheus_client`), Bash (POSIX-compliant, ShellCheck-verified).
+- **Host Agents & Tooling:** Python 3 (`psutil`, `prometheus_client`, `PyYAML`), Bash (POSIX-compliant, ShellCheck-verified).
 - **Orchestration & Security:** Docker Compose v2 (rootless, read-only rootfs, `cap_drop: [ALL]`), systemd.
 
 ---
@@ -167,7 +170,7 @@ Open **`http://127.0.0.1:3001`** in your browser.
 
 ### 1. Host Metrics Pipeline
 - **Node Exporter (`:9100`):** Exposes standard Linux kernel metrics (`node_cpu_*`, `node_memory_*`, `node_filesystem_*`, `node_network_*`).
-- **Custom Python Agent (`:9101`):** A custom daemon (`agent/main.py`) that collects PSI metrics (`node_pressure_*`), differential process resource allocations, and individual systemd unit statuses.
+- **Custom Python Agent (`:9101`):** A custom daemon (`agent/main.py`) that collects PSI metrics (`node_pressure_*`), differential process resource allocations, and individual systemd unit statuses using `psutil`, `prometheus_client`, and `PyYAML`.
 - **Prometheus File-SD (`prometheus/targets/`):** Scrapes both exporters every 15 seconds. Adding or modifying JSON targets dynamically registers new hosts without restarting Prometheus.
 
 ### 2. Systemd Journal Logging Pipeline
@@ -199,7 +202,7 @@ The lab includes 5 pre-provisioned dashboards located in `grafana/dashboards/`:
   - **109 targets returned live metric data (>0 series)**.
   - **2 targets returned 0 series as expected** (`ALERTS{alertstate="firing"}` in Dashboard 01 and `ALERTS` in Dashboard 05), reflecting normal, healthy baseline operation with no active alerts.
   - **0 PromQL syntax or query execution errors**.
-- **Visual UI Inspection:** Visual panel rendering, chart styles, and threshold colorizations can be viewed directly in the Grafana web interface at `http://127.0.0.1:3001`.
+- **Visual UI Inspection:** Reviewers can manually inspect panel layout, graphs, and threshold styling by logging into the Grafana UI at `http://127.0.0.1:3001`.
 
 ---
 
@@ -208,10 +211,13 @@ The lab includes 5 pre-provisioned dashboards located in `grafana/dashboards/`:
 Alerting rules are organized in `prometheus/rules/` and `prometheus/alerts/` (80 total rules evaluated every 15 seconds):
 
 ### Routing Hierarchy (`alertmanager/alertmanager.yml`)
-1. **Critical Outages (`severity: critical`):** Routed to `pager-critical` (PagerDuty placeholder) with immediate 10s wait and 1h repeat intervals.
-2. **Warning Degradations (`severity: warning`):** Routed to `slack-warnings` (#alerts-warning channel placeholder) with 1m wait and 6h repeat intervals.
+1. **Critical Outages (`severity: critical`):** Routed to `pager-critical` (PagerDuty template placeholder) with immediate 10s wait and 1h repeat intervals.
+2. **Warning Degradations (`severity: warning`):** Routed to `slack-warnings` (#alerts-warning channel template placeholder) with 1m wait and 6h repeat intervals.
 3. **Synthetic Failures (`subsystem: blackbox`):** Routed to `blackbox-responder` (`http://host.docker.internal:5002/api/blackbox-triage`) for automated triage.
 4. **Heartbeat (`alertname: Watchdog`):** Continuous dead man's switch verifying the alert delivery pipeline.
+
+> [!NOTE]
+> **External Integrations Note:** The `pager-critical` (PagerDuty) and `slack-warnings` (Slack) receiver blocks in `alertmanager.yml` contain template placeholders. In this local lab environment, incident notifications are exercised safely via the local mock webhook receiver (`scripts/reliability/mock_alert_receiver.py`) without requiring live external API credentials.
 
 ### Inhibition Rules
 - Total host unavailability inhibits all derived hardware and exporter alerts.
@@ -238,6 +244,7 @@ Following Google SRE principles, the platform implements quantitative reliabilit
 
 Located in `scripts/reliability/`, automated runbooks resolve common host failures safely:
 
+- **On-Demand Execution:** Remediation runbooks are designed for guarded, on-demand execution during drills or incident triage rather than running as an unmonitored background daemon.
 - **Idempotent Execution:** Checks precondition state before taking action.
 - **Circuit Breakers:** Limits retry attempts (maximum 3 iterations) to prevent flapping or cascading failures.
 - **Safety Invariants:** Strictly prohibits operations on the root filesystem (`/`) or system critical paths.

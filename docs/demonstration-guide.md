@@ -41,19 +41,25 @@ Navigate to **Dashboards**:
 
 | # | Dashboard Name | Panels | Key SRE Insights & Operational Focus |
 |---|----------------|:------:|--------------------------------------|
-| **01** | **Linux System Overview** | 19 | Host health gauges, CPU/RAM summary, Disk usage per mount, Active Firing Alerts, Systemd failed units. Uses `$instance` variable. |
-| **02** | **CPU and Memory** | 17 | Mode breakdown (user, system, iowait), load normalized by CPU cores, Pressure Stall Information (PSI `some` / `full`), Swap thrashing rates. |
+| **01** | **Linux System Overview** | 19 | High-level host status, uptime, core gauges (CPU, RAM, Disk), active firing alerts, and systemd service failures. |
+| **02** | **CPU and Memory** | 17 | Core utilization breakdown, load average vs core capacity, Pressure Stall Information (PSI `some` / `full`), Swap thrashing rates. |
 | **03** | **Storage and Filesystem** | 17 | Filesystem space & inode saturation (with time-to-exhaustion forecasts), disk I/O throughput, read/write latency, and loop-device filtering. |
 | **04** | **Network and Processes** | 19 | Interface bandwidth, RX/TX error and drop rates, TCP socket allocation, top CPU/RAM consuming processes, zombie thread detection. |
 | **05** | **Reliability Overview** | 18 | SRE Golden Signals, 99.9% SLO status, error budget burn rates (1h & 6h windows), Blackbox synthetic probe latency, MTBF & MTTR metrics. |
 
-*Note: All 111 PromQL query targets across these 90 panels have been validated via Prometheus API tests. Visual inspection confirms layout, graphing, and threshold rendering in the UI.*
+### Dashboard Verification Methodology:
+- **JSON Inventory:** 5 dashboard definitions containing 90 panels and 111 embedded PromQL query targets.
+- **Programmatic Validation:** All 111 PromQL expressions were tested programmatically against the Prometheus HTTP query API (`http://127.0.0.1:9091/api/v1/query`) on `primary-node`:
+  - **109 targets returned live metric data (>0 series)**.
+  - **2 targets returned 0 series as expected** (`ALERTS{alertstate="firing"}` in Dashboard 01 and `ALERTS` in Dashboard 05), representing normal healthy baseline operation with no active alerts.
+  - **0 query syntax or execution errors**.
+- **Visual UI Inspection:** Reviewers can manually inspect panel layout, graphing, and threshold rendering in the Grafana UI at `http://127.0.0.1:3001`.
 
 ---
 
 ## 3. Custom Python Host Telemetry Verification (1 Minute)
 
-The lab includes a custom Python exporter (`agent/`) that gathers granular kernel telemetry via `/proc` and `/sys` without third-party dependencies:
+The lab includes a custom Python exporter (`agent/`) that gathers granular kernel telemetry via `/proc` and `/sys` using `psutil`, `prometheus_client`, and `PyYAML`:
 
 ```bash
 # Check the Python agent's live Prometheus metrics endpoint
@@ -101,43 +107,54 @@ The systemd journal log shipper runs via Grafana Alloy (`/etc/alloy/config.alloy
 
 ---
 
-## 5. Non-Destructive E2E Alert Delivery Drill (Safe with Automated Traps)
+## 5. Non-Destructive E2E Alert Delivery Drill
 
-Alertmanager is configured with multi-tier routing (Critical PagerDuty, Warning Slack, and Blackbox Synthetic Triage). You can verify the complete alerting pipeline using the built-in mock receiver.
+Alertmanager is configured with multi-tier routing (Critical PagerDuty, Warning Slack, and Blackbox Synthetic Triage). You can verify the complete alert delivery pipeline using the built-in mock receiver.
 
 The following script safely deploys a temporary canary rule, verifies alert ingestion, and uses a shell trap to guarantee cleanup even if interrupted:
 
 ```bash
 (
   CANARY_RULE="prometheus/alerts/demo_canary.yml"
-  MOCK_PID=""
-  STARTED_RECEIVER=0
+  STARTED_RECEIVER_PID=""
 
   cleanup() {
     echo ""
     echo "[Cleanup] Removing temporary canary rule..."
     rm -f "$CANARY_RULE"
     curl -s -X POST http://127.0.0.1:9091/-/reload >/dev/null 2>&1 || true
-    if [ "$STARTED_RECEIVER" -eq 1 ] && [ -n "$MOCK_PID" ] && kill -0 "$MOCK_PID" 2>/dev/null; then
-      echo "[Cleanup] Stopping temporary mock alert receiver (PID: $MOCK_PID)..."
-      kill "$MOCK_PID" 2>/dev/null || true
+    if [ -n "$STARTED_RECEIVER_PID" ] && kill -0 "$STARTED_RECEIVER_PID" 2>/dev/null; then
+      echo "[Cleanup] Stopping temporary mock alert receiver (PID: $STARTED_RECEIVER_PID)..."
+      kill "$STARTED_RECEIVER_PID" 2>/dev/null || true
     fi
     echo "[Cleanup] Complete."
   }
   trap cleanup EXIT INT TERM
 
-  # 1. Start mock receiver only if not already running on port 5002
-  if ! curl -s http://127.0.0.1:5002/api/alerts >/dev/null 2>&1; then
-    echo "[Step 1] Starting temporary mock alert receiver on port 5002..."
-    python3 scripts/reliability/mock_alert_receiver.py --port 5002 >/dev/null 2>&1 &
-    MOCK_PID=$!
-    STARTED_RECEIVER=1
-    sleep 1
-  else
-    echo "[Step 1] Mock alert receiver is already active on port 5002."
+  # 1. Guard against overwriting an existing rule file
+  if [ -e "$CANARY_RULE" ]; then
+    echo "Error: $CANARY_RULE already exists. Aborting to prevent overwriting existing rules." >&2
+    exit 1
   fi
 
-  # 2. Deploy temporary canary alert rule
+  # 2. Positively identify existing mock receiver or start a temporary one
+  if curl -s http://127.0.0.1:5002/healthz 2>/dev/null | grep -q ""service": "mock-alert-receiver""; then
+    echo "[Step 1] Positively identified existing mock alert receiver on port 5002."
+  else
+    echo "[Step 1] Starting temporary mock alert receiver on port 5002..."
+    python3 scripts/reliability/mock_alert_receiver.py --port 5002 >/dev/null 2>&1 &
+    STARTED_RECEIVER_PID=$!
+    sleep 1
+    if ! curl -s http://127.0.0.1:5002/healthz 2>/dev/null | grep -q ""service": "mock-alert-receiver""; then
+      echo "Error: Failed to verify mock alert receiver on port 5002." >&2
+      exit 1
+    fi
+  fi
+
+  # Clear any previous test events
+  curl -s -X DELETE http://127.0.0.1:5002/api/blackbox-triage >/dev/null 2>&1 || true
+
+  # 3. Deploy temporary canary alert rule
   echo "[Step 2] Deploying temporary canary alert rule..."
   cat << 'EOF' > "$CANARY_RULE"
 groups:
@@ -156,13 +173,30 @@ EOF
   # Reload Prometheus
   curl -s -X POST http://127.0.0.1:9091/-/reload
 
-  # 3. Wait 16s for Alertmanager group_wait and verify alert receipt
-  echo "[Step 3] Waiting 16s for Alertmanager group_wait..."
-  sleep 16
-  echo "[Step 4] Querying mock receiver for received canary alert:"
-  curl -s http://127.0.0.1:5002/api/blackbox-triage | jq '.events[-1].payload.status, .events[-1].payload.alerts[0].labels.alertname'
+  # 4. Wait for Prometheus evaluation cycle and Alertmanager group_wait
+  echo "[Step 3] Waiting for alert evaluation and Alertmanager dispatch..."
+  RECEIVED=0
+  for i in $(seq 1 12); do
+    sleep 3
+    STATUS=$(curl -s http://127.0.0.1:5002/api/blackbox-triage | jq -r ".events[-1].payload.status" 2>/dev/null || echo "none")
+    ALERTNAME=$(curl -s http://127.0.0.1:5002/api/blackbox-triage | jq -r ".events[-1].payload.alerts[0].labels.alertname" 2>/dev/null || echo "none")
+    if [ "$STATUS" = "firing" ] && [ "$ALERTNAME" = "ReviewerCanaryAlert" ]; then
+      echo "[Step 4] Alert received! (attempt $i: status=$STATUS, alertname=$ALERTNAME)"
+      RECEIVED=1
+      break
+    fi
+  done
+
+  if [ "$RECEIVED" -eq 1 ]; then
+    echo "VERIFICATION PASSED: Canary alert firing delivery confirmed!"
+  else
+    echo "VERIFICATION FAILED: Expected firing alert not received within 36s."
+  fi
 )
 ```
+
+> [!NOTE]
+> **Delivery Scope:** This demonstration explicitly validates **Firing Alert Delivery** to the webhook receiver within 3–15 seconds. Full resolution webhook delivery (`status="resolved"`) occurs once the rule is removed and Alertmanager's `resolve_timeout` (5m) expires, as verified during integration testing.
 
 ---
 
@@ -224,18 +258,18 @@ bash security/network_exposure_audit.sh
 
 ---
 
-## 9. Test Battery Breakdown
+## 9. Test Battery & Execution Evidence
 
-To verify all unit tests, integration contracts, and reliability guardrails:
+To run and verify the test suites:
 
 ```bash
 # 1. Python Unit & Reliability Suites (88 tests)
 .venv/bin/pytest tests/python/ tests/reliability/ -q
 
-# 2. Shell Assertion Test Runner (83 assertions)
+# 2. Shell Assertion Test Runner (83 assertions across 55 test blocks in 7 scripts)
 bash scripts/tests/test_runner.sh
 
-# 3. Multi-Host Verification (28 assertions)
+# 3. Multi-Host Verification (28 assertions across 5 groups)
 bash tests/multihost/test_multihost_monitoring.sh
 
 # 4. Prometheus Static Syntax Validation (1 config file, 80 rules across 5 files)
@@ -243,9 +277,26 @@ promtool check config prometheus/prometheus.yml
 promtool check rules prometheus/rules/*.yml prometheus/alerts/*.yml
 ```
 
-### Verified Test Categories:
-- **Python Suites:** 88 passed (58 unit/contract tests, 30 reliability guardrail tests).
-- **Bash TAP Assertions:** 83 passed across 7 subsystem test scripts.
-- **Multi-Host Assertions:** 28 passed across 5 verification groups.
-- **Prometheus Static Validation:** 80 rules across 5 files and 1 main config file checked via `promtool`.
-- **Container Hardening Checks:** 42 CIS Docker Benchmark checks passed.
+### Exact Reconciled Assertion Counts:
+- **Python Tests (88 passed):**
+  - `tests/python/`: 58 passed (custom collectors, HTTP server, integration contracts, configuration safety).
+  - `tests/reliability/`: 30 passed (lifecycle math, remediation guardrails, circuit breakers, safety invariants, E2E drill scenarios).
+- **Bash Subsystem Assertions (83 passed across 55 test blocks in 7 test scripts):**
+  - `test_cli_and_errors.sh`: 20 assertions
+  - `test_cpu.sh`: 10 assertions
+  - `test_memory.sh`: 11 assertions
+  - `test_network.sh`: 14 assertions
+  - `test_process.sh`: 12 assertions
+  - `test_storage.sh`: 8 assertions
+  - `test_systemd.sh`: 8 assertions
+- **Multi-Host Verification Assertions (28 passed across 5 groups):**
+  - File-SD Inventory: 4 assertions
+  - Target Scrape States: 4 assertions
+  - Metric Isolation: 4 assertions
+  - Log Stream Isolation: 5 assertions
+  - Alloy Installer & Rollback Mechanics: 11 assertions
+- **Prometheus Static Syntax Validation:**
+  - `prometheus/prometheus.yml`: 1 configuration file verified.
+  - `prometheus/rules/*.yml`, `prometheus/alerts/*.yml`: 80 rules across 5 files verified.
+- **Container Hardening Configuration Checks:**
+  - `security/container_audit.sh`: 42 checks passed across 6 container service definitions.
