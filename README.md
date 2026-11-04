@@ -22,37 +22,9 @@ The platform provides end-to-end host telemetry collection (metrics, kernel Pres
 
 ## Architecture Overview
 
-The lab runs containerized observability services alongside host-level telemetry agents. All containers communicate over an internal Docker bridge network (`lab-monitoring-net`), and exposed service ports are strictly bound to the loopback interface (`127.0.0.1`) to avoid port conflicts with native host services.
+The lab runs containerized observability services alongside host-level telemetry agents. All containers communicate over an internal Docker bridge network (`lab-monitoring-net`), and exposed lab service ports are strictly bound to the loopback interface (`127.0.0.1`) to avoid port conflicts with native host services. The pre-existing native host Node Exporter runs on its default host port (`:9100`, wildcard `0.0.0.0`).
 
-```
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                                   LINUX HOST                                    │
-│                                                                                 │
-│   Kernel Telemetry (/proc, /sys)               Systemd Journal                  │
-│               │                                       │                         │
-│       ┌───────┴───────┐                               │                         │
-│       ▼               ▼                               ▼                         │
-│  Node Exporter   Python Agent                Grafana Alloy (systemd)            │
-│    (:9100)       (127.0.0.1:9101)               (127.0.0.1:12346)               │
-└───────┬───────────────┬───────────────────────────────┬─────────────────────────┘
-        │ Scraped via   │ Scraped via                   │ Push (HTTP)
-        │ host-gateway  │ host-gateway                  │
-┌───────▼───────────────▼───────────────────────────────▼─────────────────────────┐
-│               DOCKER COMPOSE STACK (127.0.0.1 Loopback Bound)                   │
-│                                                                                 │
-│   ┌───────────────────────────────┐     ┌───────────────────────────────────┐   │
-│   │      Prometheus (:9091)       │────▶│       Alertmanager (:9094)        │   │
-│   │  • File-SD target discovery   │     │  • Alert routing & deduplication  │   │
-│   │  • 80 Alert & SRE rules       │     │  • Webhook triage (:5002)         │   │
-│   └───────┬───────────────┬───────┘     └───────────────────────────────────┘   │
-│           │               │                                                     │
-│           ▼               ▼                                                     │
-│   ┌───────────────┐ ┌───────────────────┐   ┌───────────────────────────────┐   │
-│   │Grafana (:3001)│ │Blackbox (:9115)   │   │         Loki (:3100)          │   │
-│   │• 5 Dashboards │ │• Synthetic probes │   │  • Log stream storage         │   │
-│   └───────────────┘ └───────────────────┘   └───────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────────────────────────┘
-```
+![Linux System Monitoring & Reliability Lab Architecture](docs/architecture/architecture-diagram.jpg)
 
 ### Port Allocation
 
@@ -63,7 +35,7 @@ The lab runs containerized observability services alongside host-level telemetry
 - **Blackbox Exporter:** `127.0.0.1:9115`
 - **Grafana Alloy:** `127.0.0.1:12345` (container) / `127.0.0.1:12346` (native systemd)
 - **Custom Python Agent:** `127.0.0.1:9101`
-- **Node Exporter:** `9100`
+- **Node Exporter:** Port `9100` (native host systemd, wildcard `0.0.0.0`)
 
 ---
 

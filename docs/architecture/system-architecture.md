@@ -22,7 +22,7 @@ To ensure non-interference:
    - Lab Blackbox Exporter: `127.0.0.1:9115` -> Container `9115`
    - Lab Loki: `127.0.0.1:3100` -> Container `3100`
    - Lab Alloy: `127.0.0.1:12345` -> Container `12345`
-   - Native Node Exporter: `127.0.0.1:9100` (Native host systemd service)
+   - Native Node Exporter: Port `9100` (Native host systemd service, default wildcard `0.0.0.0`)
    - Custom Python Monitoring Agent: `127.0.0.1:9101` (Host Python daemon)
 3. **Dedicated Docker Bridge Network:** All containerized lab components communicate across a private, isolated bridge network named `lab_monitoring_network` (`lab-monitoring-net`, `172.28.0.0/16`) using internal container DNS names (`prometheus:9090`, `alertmanager:9093`, `blackbox-exporter:9115`, `loki:3100`).
 
