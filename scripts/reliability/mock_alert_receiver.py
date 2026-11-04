@@ -2,7 +2,7 @@
 """
 Standalone Mock Alert Receiver
 Project: Linux System Monitoring & Reliability Lab
-Purpose: Safe local HTTP webhook sink for Alertmanager webhook notifications on port 5001.
+Purpose: Safe local HTTP webhook sink for Alertmanager webhook notifications on port 5002.
          Prevents alert notification delivery errors during local development and testing
          without requiring live Slack or PagerDuty credentials.
 """
@@ -134,7 +134,7 @@ def make_handler(store: AlertStore):
     return AlertWebhookHandler
 
 
-def run_server(host: str = "127.0.0.1", port: int = 5001, log_file: Optional[str] = None) -> None:
+def run_server(host: str = "127.0.0.1", port: int = 5002, log_file: Optional[str] = None) -> None:
     store = AlertStore(log_file=log_file)
     handler_class = make_handler(store)
     server = HTTPServer((host, port), handler_class)
@@ -162,7 +162,7 @@ def run_server(host: str = "127.0.0.1", port: int = 5001, log_file: Optional[str
 def main() -> None:
     parser = argparse.ArgumentParser(description="Mock Alert Receiver for Alertmanager")
     parser.add_argument("--host", default="127.0.0.1", help="Listen host (default: 127.0.0.1)")
-    parser.add_argument("--port", type=int, default=5001, help="Listen port (default: 5001)")
+    parser.add_argument("--port", type=int, default=5002, help="Listen port (default: 5002)")
     parser.add_argument("--output-file", default=None, help="Path to jsonl log file for incoming alerts")
     args = parser.parse_args()
 

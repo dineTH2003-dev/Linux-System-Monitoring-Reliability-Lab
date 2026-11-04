@@ -562,7 +562,7 @@
           "refId": "A"
         },
         {
-          "expr": "avg_over_time(up{job=\"prometheus\",instance=~\"$instance\"}[5m]) * 100",
+          "expr": "avg_over_time(up{job=\"prometheus\"}[5m]) * 100",
           "legendFormat": "Prometheus TSDB ({{instance}})",
           "refId": "B"
         },

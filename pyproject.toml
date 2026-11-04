@@ -10,7 +10,7 @@ authors = [
     { name = "Site Reliability Engineering Team", email = "sre@example.com" }
 ]
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.10"
 dependencies = [
     "pyyaml>=6.0.2",
     "psutil>=6.1.0",
