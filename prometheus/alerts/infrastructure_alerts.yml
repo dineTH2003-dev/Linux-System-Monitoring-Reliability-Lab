@@ -20,7 +20,7 @@ groups:
           summary: "Host {{ $labels.instance }} is unavailable or unreachable"
           description: "All telemetry exporters (node, python-agent) or ICMP ping probes for {{ $labels.instance }} have been down for >2 minutes. Possible power loss, kernel panic, or network partition."
           diagnostic_context: "Check host power, console log, and hypervisor/network routing."
-          diagnostic_command: "ping -c 3 rubi && ip neigh"
+          diagnostic_command: "ping -c 3 {{ $labels.instance }} && ip neigh"
           runbook_url: "docs/troubleshooting/host-unavailable.md"
 
       - alert: NodeExporterUnavailable

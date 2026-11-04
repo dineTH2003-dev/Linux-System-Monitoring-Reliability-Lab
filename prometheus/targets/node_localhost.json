@@ -1,0 +1,12 @@
+[
+  {
+    "targets": [
+      "host.docker.internal:9100"
+    ],
+    "labels": {
+      "instance": "primary-node",
+      "collector_type": "node_exporter",
+      "role": "host_telemetry"
+    }
+  }
+]

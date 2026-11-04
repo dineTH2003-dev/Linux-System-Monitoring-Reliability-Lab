@@ -10,7 +10,6 @@ global:
   external_labels:
     environment: 'lab'
     monitor: 'linux-system-monitoring-lab'
-    host: 'rubi'
 
 rule_files:
   - 'rules/recording_rules.yml'
@@ -27,36 +26,36 @@ alerting:
 
 
 scrape_configs:
-  # 1. Native Node Exporter running on physical Ubuntu host
-  # Reached via Docker Desktop host gateway 'host.docker.internal:9100'
+  # 1. Native / Remote Node Exporters (File-based Service Discovery)
+  # Discovers local and remote host hardware/kernel telemetry targets
   - job_name: 'node'
     scrape_interval: 15s
     scrape_timeout: 10s
     metrics_path: '/metrics'
-    static_configs:
-      - targets: ['host.docker.internal:9100']
-        labels:
-          instance: 'rubi'
-          collector_type: 'node_exporter'
-          role: 'host_telemetry'
+    file_sd_configs:
+      - files:
+          - '/etc/prometheus/targets/node_*.json'
+        refresh_interval: 30s
     metric_relabel_configs:
       # Cardinality optimization: drop redundant systemd states never queried by alerts or dashboards
       - source_labels: [__name__, state]
         regex: 'node_systemd_unit_state;(inactive|activating|deactivating)'
         action: drop
+      # Cardinality optimization: drop unused NFS and virtual guest kernel counters
+      - source_labels: [__name__]
+        regex: 'node_(nfs|nfsd|cpu_guest)_.*'
+        action: drop
 
-  # 2. Custom Python Monitoring Agent running on Ubuntu host
-  # Exposes custom psutil/kernel metrics on port 9101
+  # 2. Custom Python Monitoring Agents (File-based Service Discovery)
+  # Discovers local and remote host custom psutil/kernel telemetry targets on port 9101
   - job_name: 'python-agent'
     scrape_interval: 15s
     scrape_timeout: 10s
     metrics_path: '/metrics'
-    static_configs:
-      - targets: ['host.docker.internal:9101']
-        labels:
-          instance: 'rubi'
-          collector_type: 'python_agent'
-          role: 'custom_telemetry'
+    file_sd_configs:
+      - files:
+          - '/etc/prometheus/targets/agent_*.json'
+        refresh_interval: 30s
 
   # 3. Prometheus Server Self-Monitoring
   # Scrapes Prometheus internal time-series and query metrics

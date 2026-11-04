@@ -1,0 +1,10 @@
+[
+  {
+    "targets": ["lab-mock-node-02:9100"],
+    "labels": {
+      "instance": "node-02",
+      "collector_type": "node_exporter",
+      "role": "remote_host_telemetry"
+    }
+  }
+]

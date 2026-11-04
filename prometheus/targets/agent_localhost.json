@@ -1,0 +1,12 @@
+[
+  {
+    "targets": [
+      "host.docker.internal:9101"
+    ],
+    "labels": {
+      "instance": "primary-node",
+      "collector_type": "python_agent",
+      "role": "custom_telemetry"
+    }
+  }
+]

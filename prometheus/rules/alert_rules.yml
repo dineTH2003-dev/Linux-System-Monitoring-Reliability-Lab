@@ -9,7 +9,7 @@ groups:
     interval: 15s
     rules:
       - alert: HostFilesystemReadonly
-        expr: node_filesystem_readonly{fstype=~"ext4|xfs"} == 1
+        expr: node_filesystem_readonly{fstype=~"ext4|xfs",mountpoint!~"^/(etc|proc|sys|dev).*"} == 1
         for: 1m
         labels:
           severity: critical

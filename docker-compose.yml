@@ -33,6 +33,7 @@ services:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - ./prometheus/rules:/etc/prometheus/rules:ro
       - ./prometheus/alerts:/etc/prometheus/alerts:ro
+      - ./prometheus/targets:/etc/prometheus/targets:ro
       - lab_prometheus_data:/prometheus
     tmpfs:
       - /tmp:noexec,nosuid,size=64M
@@ -221,6 +222,8 @@ services:
     command:
       - --config.file=/etc/blackbox_exporter/config.yml
       - --web.listen-address=0.0.0.0:9115
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     deploy:
       resources:
         limits:
