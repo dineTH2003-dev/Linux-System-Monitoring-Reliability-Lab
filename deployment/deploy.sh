@@ -114,7 +114,27 @@ cmd_preflight() {
 
     # 5. Host port conflict check
     log_info "Checking port availability for lab bindings (127.0.0.1)..."
-    for port in "${LAB_PORTS[@]}"; do
+    local lab_ports=("${LAB_PORTS[@]}")
+    if [[ -f "$ENV_FILE" ]]; then
+        local prom_p graf_p am_p loki_p bb_p alloy_p
+        prom_p=$(grep -E '^[[:space:]]*PROMETHEUS_HOST_PORT=' "$ENV_FILE" | cut -d= -f2 | tr -d ' "'\''\r\n' || true)
+        graf_p=$(grep -E '^[[:space:]]*GRAFANA_HOST_PORT=' "$ENV_FILE" | cut -d= -f2 | tr -d ' "'\''\r\n' || true)
+        am_p=$(grep -E '^[[:space:]]*ALERTMANAGER_HOST_PORT=' "$ENV_FILE" | cut -d= -f2 | tr -d ' "'\''\r\n' || true)
+        loki_p=$(grep -E '^[[:space:]]*LOKI_HOST_PORT=' "$ENV_FILE" | cut -d= -f2 | tr -d ' "'\''\r\n' || true)
+        bb_p=$(grep -E '^[[:space:]]*BLACKBOX_HOST_PORT=' "$ENV_FILE" | cut -d= -f2 | tr -d ' "'\''\r\n' || true)
+        alloy_p=$(grep -E '^[[:space:]]*ALLOY_HOST_PORT=' "$ENV_FILE" | cut -d= -f2 | tr -d ' "'\''\r\n' || true)
+
+        lab_ports=(
+            "${prom_p:-9091}"
+            "${graf_p:-3001}"
+            "${am_p:-9093}"
+            "${loki_p:-3100}"
+            "${bb_p:-9115}"
+            "${alloy_p:-12345}"
+        )
+    fi
+
+    for port in "${lab_ports[@]}"; do
         if ss -tuln | grep -q "127.0.0.1:${port}\b"; then
             # Verify if it is already our lab container
             if docker ps --format '{{.Ports}}' | grep -q "127.0.0.1:${port}->"; then
@@ -153,6 +173,11 @@ cmd_up() {
     log_info "Enforcing least privilege permissions across configs and scripts..."
     bash "$REPO_ROOT/security/harden_permissions.sh" >/dev/null 2>&1 || true
 
+    log_info "Ensuring host telemetry agent is active..."
+    if [[ -x "$REPO_ROOT/scripts/agent.sh" ]]; then
+        bash "$REPO_ROOT/scripts/agent.sh" start >/dev/null 2>&1 || true
+    fi
+
     log_info "Launching hardened monitoring stack via Docker Compose..."
     docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up -d
 
@@ -166,6 +191,9 @@ cmd_up() {
 cmd_down() {
     log_info "Stopping monitoring stack gracefully (preserving persistent TSDB and database volumes)..."
     docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" down
+    if [[ -x "$REPO_ROOT/scripts/agent.sh" ]]; then
+        bash "$REPO_ROOT/scripts/agent.sh" stop >/dev/null 2>&1 || true
+    fi
     log_info "Stack stopped."
 }
 

@@ -50,7 +50,7 @@ ALLOWED_VOLUMES=(
     lab_alloy_data
 )
 
-LAB_PORTS=(9091 3001 9093 3100 9115)
+LAB_PORTS=(9091 3001 9093 9094 3100 9115 12345)
 
 # ------------------------------------------------------------------------------
 # 2. CLI Options & Operational Mode Parsing

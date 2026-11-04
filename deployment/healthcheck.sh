@@ -18,22 +18,42 @@ echo "  Timestamp: $(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 echo "======================================================================"
 
 python3 - << 'EOF'
+import os
 import urllib.request
 import urllib.error
 import time
 import sys
 
+# Load .env if present for dynamic port overrides
+env_vars = {}
+if os.path.exists(".env"):
+    with open(".env", "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if line and not line.startswith("#") and "=" in line:
+                k, v = line.split("=", 1)
+                env_vars[k.strip()] = v.strip().strip("'\"")
+
+host_ip = os.getenv("HOST_BIND_IP", env_vars.get("HOST_BIND_IP", "127.0.0.1"))
+prom_port = os.getenv("PROMETHEUS_HOST_PORT", env_vars.get("PROMETHEUS_HOST_PORT", "9091"))
+grafana_port = os.getenv("GRAFANA_HOST_PORT", env_vars.get("GRAFANA_HOST_PORT", "3001"))
+am_port = os.getenv("ALERTMANAGER_HOST_PORT", env_vars.get("ALERTMANAGER_HOST_PORT", "9093"))
+loki_port = os.getenv("LOKI_HOST_PORT", env_vars.get("LOKI_HOST_PORT", "3100"))
+blackbox_port = os.getenv("BLACKBOX_HOST_PORT", env_vars.get("BLACKBOX_HOST_PORT", "9115"))
+alloy_port = os.getenv("ALLOY_HOST_PORT", env_vars.get("ALLOY_HOST_PORT", "12345"))
+agent_port = os.getenv("AGENT_PORT", env_vars.get("AGENT_PORT", "9101"))
+
 ENDPOINTS = [
     # Project Lab Services (Docker Stack)
-    {"name": "Lab Prometheus", "url": "http://127.0.0.1:9091/-/healthy", "expected": 200, "critical": True},
-    {"name": "Lab Grafana", "url": "http://127.0.0.1:3001/api/health", "expected": 200, "critical": True},
-    {"name": "Lab Alertmanager", "url": "http://127.0.0.1:9093/-/healthy", "expected": 200, "critical": False},
-    {"name": "Lab Loki", "url": "http://127.0.0.1:3100/ready", "expected": 200, "critical": False},
-    {"name": "Lab Blackbox", "url": "http://127.0.0.1:9115/-/healthy", "expected": 200, "critical": False},
-    {"name": "Lab Alloy", "url": "http://127.0.0.1:12345/-/ready", "expected": 200, "critical": False},
+    {"name": "Lab Prometheus", "url": f"http://{host_ip}:{prom_port}/-/healthy", "expected": 200, "critical": True},
+    {"name": "Lab Grafana", "url": f"http://{host_ip}:{grafana_port}/api/health", "expected": 200, "critical": True},
+    {"name": "Lab Alertmanager", "url": f"http://{host_ip}:{am_port}/-/healthy", "expected": 200, "critical": False},
+    {"name": "Lab Loki", "url": f"http://{host_ip}:{loki_port}/ready", "expected": 200, "critical": False},
+    {"name": "Lab Blackbox", "url": f"http://{host_ip}:{blackbox_port}/-/healthy", "expected": 200, "critical": False},
+    {"name": "Lab Alloy", "url": f"http://{host_ip}:{alloy_port}/-/ready", "expected": 200, "critical": False},
 
     # Custom Agent
-    {"name": "Custom Python Agent", "url": "http://127.0.0.1:9101/healthz", "expected": 200, "critical": False},
+    {"name": "Custom Python Agent", "url": f"http://127.0.0.1:{agent_port}/healthz", "expected": 200, "critical": False},
 
     # Host Native Services (Optional coexistence targets; non-critical for lab portability)
     {"name": "Native Node Exporter", "url": "http://127.0.0.1:9100/metrics", "expected": 200, "critical": False},

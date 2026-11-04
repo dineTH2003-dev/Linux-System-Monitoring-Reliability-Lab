@@ -25,7 +25,8 @@ import sys
 LAB_PORTS = {
     9091: "Lab Prometheus (Container)",
     3001: "Lab Grafana (Container)",
-    9093: "Lab Alertmanager (Container)",
+    9093: "Lab Alertmanager (Container Default)",
+    9094: "Lab Alertmanager (Container Alternate)",
     3100: "Lab Loki (Container)",
     9115: "Lab Blackbox Exporter (Container)",
     12345: "Lab Alloy Journal Shipper (Container)",

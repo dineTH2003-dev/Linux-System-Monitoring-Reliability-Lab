@@ -1,0 +1,75 @@
+# ==============================================================================
+# Multi-Host Simulation Fixture (Milestone 2)
+# Project: Linux System Monitoring & Reliability Lab
+# Purpose: Simulates two distinct remote Linux hosts (node-02, node-03) on the lab network
+# ==============================================================================
+
+services:
+  mock-node-02:
+    image: prom/node-exporter:v1.8.2
+    container_name: lab-mock-node-02
+    restart: unless-stopped
+    user: "65534:65534"
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    command:
+      - --path.procfs=/proc
+      - --path.sysfs=/sys
+      - --web.listen-address=0.0.0.0:9100
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: "64M"
+        reservations:
+          memory: 16M
+    healthcheck:
+      test: ["CMD-SHELL", "/bin/wget -q --spider http://localhost:9100/metrics || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    networks:
+      lab-monitoring-net:
+        aliases:
+          - lab-mock-node-02
+          - node-02
+
+  mock-node-03:
+    image: prom/node-exporter:v1.8.2
+    container_name: lab-mock-node-03
+    restart: unless-stopped
+    user: "65534:65534"
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    command:
+      - --path.procfs=/proc
+      - --path.sysfs=/sys
+      - --web.listen-address=0.0.0.0:9100
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: "64M"
+        reservations:
+          memory: 16M
+    healthcheck:
+      test: ["CMD-SHELL", "/bin/wget -q --spider http://localhost:9100/metrics || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    networks:
+      lab-monitoring-net:
+        aliases:
+          - lab-mock-node-03
+          - node-03
+
+networks:
+  lab-monitoring-net:
+    name: lab_monitoring_network
+    external: true

@@ -367,7 +367,9 @@ TMP_ARCHIVE="$TMP_SET_DIR/$ARCHIVE_BASENAME"
 TMP_SHA="$TMP_SET_DIR/${ARCHIVE_BASENAME}.sha256"
 TMP_MANIFEST="$TMP_SET_DIR/${ARCHIVE_BASENAME}.manifest"
 
-TEMP_STAGE="$(mktemp -d "${TMPDIR:-/tmp}/lab-backup-XXXXXX")"
+mkdir -p "$CANONICAL_BACKUP_DIR/.tmp" 2>/dev/null || true
+chmod 0700 "$CANONICAL_BACKUP_DIR/.tmp" 2>/dev/null || true
+TEMP_STAGE="$(mktemp -d "${TMPDIR:-$CANONICAL_BACKUP_DIR/.tmp}/lab-backup-XXXXXX" 2>/dev/null || mktemp -d "/tmp/lab-backup-XXXXXX")"
 if ! chmod 0700 "$TEMP_STAGE" 2>/dev/null; then
     echo "  [FATAL] Failed to enforce 0700 permissions on temporary staging directory: $TEMP_STAGE" >&2
     exit 10
